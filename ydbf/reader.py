@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # YDbf - Yielded dbf reader-writer
-# Copyright (C) 2005 Raymond Hettinger
+# Inspired by code of Raymond Hettinger
+# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/362715
+#
 # Copyright (C) 2006 Yury Yurevich, Alexandr Zamaraev
 # Copyright (C) 2007 Yury Yurevich
 #
@@ -24,7 +26,7 @@ __url__ = "$URL$"
 import struct
 import itertools
 
-from lib import dbf2date, ENCODINGS, SIGNATURES, SUPPORTED_SIGNATURES
+from ydbf import lib
 
 class YDbfReader(object):
     '''
@@ -47,7 +49,7 @@ class YDbfReader(object):
         self.recsize = 0         # size of each record (in bytes)
         self.i = 0               # current item in iterator
         
-        self.dbf2date = dbf2date # function for conversion from dbf to date
+        self.dbf2date = lib.dbf2date # function for conversion from dbf to date
 
         self.readHeader()
 
@@ -56,30 +58,31 @@ class YDbfReader(object):
         Read DBF header
         ''' 
         self.fh.seek(0)
-        numrec, lenheader = struct.unpack('<xxxxLH22x',
-                                          self.fh.read(32))
+
+        sig, year, month, day, numrec, lenheader, recsize, lang = struct.unpack(
+            lib.HEADER_FORMAT,
+            self.fh.read(32))
+        
         numfields = (lenheader - 33) // 32
         fields = []
         for fieldno in xrange(numfields):
-            name, typ, size, deci = struct.unpack('<11sc4xBB14x',
+            name, typ, size, deci = struct.unpack(lib.FIELD_DESCRIPTION_FORMAT,
                                                   self.fh.read(32))
-            name = name.split('\0', 1)[0]       # NUL is a end of string
+            name = name.split('\0', 1)[0]       # NULL is a end of string
             fields.append((name, typ, size, deci))
         terminator = self.fh.read(1)
-        assert terminator == '\r'
+        assert terminator == '\x0d', "Terminator must be 0x0d"
                 
         fields.insert(0, ('DeletionFlag', 'C', 1, 0))
         self._fields = fields  # with DeletionFlag
         self.fields = fields[1:] # without DeletionFlag
-        recfmt = ''.join(['%ds' % fld[2] for fld in fields])
-        recsize = struct.calcsize(recfmt)
+        self.recfmt = ''.join(['%ds' % fld[2] for fld in fields])
+        self.recsize = struct.calcsize(self.recfmt)
         self.numrec = numrec
         self.lenheader = lenheader
         self.numfields = numfields
         self.stop_at = numrec
         self.field_names = [fld[0] for fld in self.fields]
-        self.recfmt = recfmt
-        self.recsize = recsize
     
     def __len__(self):
         '''

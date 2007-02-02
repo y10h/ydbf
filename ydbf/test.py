@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 # YDbf - Yielded dbf reader-writer
-# Copyright (C) 2006-2007 Yury Yurevich
+# Inspired by code of Raymond Hettinger
+# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/362715
+#
+# Copyright (C) 2006 Yury Yurevich, Alexandr Zamaraev
+# Copyright (C) 2007 Yury Yurevich
 #
 # http://gorod-omsk.ru/blog/pythy/projects/ydbf/
 #
@@ -29,12 +33,12 @@ from ydbf.lib import date2dbf, str2dbf, dbf2date, dbf2str
 class TestDateConverters(unittest.TestCase):
         
     def test_dbf2date(self):
-        self.assertEqual(dbf2date(''), datetime.date(1900, 1, 1))
-        self.assertEqual(dbf2date('None'), datetime.date(1900, 1, 1))
-        self.assertEqual(dbf2date(None), datetime.date(1900, 1, 1))
+        self.assertEqual(dbf2date(''), None)
+        self.assertEqual(dbf2date('None'), None)
+        self.assertEqual(dbf2date(None), None)
         self.assertEqual(dbf2date('20060506'), datetime.date(2006, 5, 6))
-        self.assertEqual(dbf2date('0'), datetime.date(2200, 1, 1))
-        self.assertEqual(dbf2date('000'), datetime.date(2200, 1, 1))
+        self.assertEqual(dbf2date('0'), None)
+        self.assertEqual(dbf2date('000'), None)
         
     def test_date2dbf(self):
         self.assertEqual(date2dbf(datetime.date(2006, 5, 6)), '20060506')
@@ -42,12 +46,12 @@ class TestDateConverters(unittest.TestCase):
         self.assertRaises(TypeError, date2dbf, '20060506')
         
     def test_dbf2str(self):
-        self.assertEqual(dbf2str(''), '01.01.1900')
-        self.assertEqual(dbf2str('None'), '01.01.1900')
-        self.assertEqual(dbf2str(None), '01.01.1900')
+        self.assertEqual(dbf2str(''), None)
+        self.assertEqual(dbf2str('None'), None)
+        self.assertEqual(dbf2str(None), None)
         self.assertEqual(dbf2str('20060506'), '06.05.2006')
-        self.assertEqual(dbf2str('0'), '01.01.2200')
-        self.assertEqual(dbf2str('000'), '01.01.2200')
+        self.assertEqual(dbf2str('0'), None)
+        self.assertEqual(dbf2str('000'), None)
         
     def test_str2dbf(self):
         self.assertEqual(str2dbf('06.05.2006'), '20060506')

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 # YDbf - Yielded dbf reader-writer
-# Copyright (C) 2005 Raymond Hettinger
-# Copyright (C) 2006-2007 Yury Yurevich
+# Inspired by code of Raymond Hettinger
+# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/362715
+#
+# Copyright (C) 2006 Yury Yurevich, Alexandr Zamaraev
+# Copyright (C) 2007 Yury Yurevich
 #
 # http://gorod-omsk.ru/blog/pythy/projects/ydbf/
 #

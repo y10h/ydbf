@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 # YDbf - Yielded dbf reader-writer
-# Copyright (C) 2006-2007 Yury Yurevich
+# Inspired by code of Raymond Hettinger
+# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/362715
+#
+# Copyright (C) 2006 Yury Yurevich, Alexandr Zamaraev
+# Copyright (C) 2007 Yury Yurevich
 #
 # http://gorod-omsk.ru/blog/pythy/projects/ydbf/
 #
@@ -57,37 +61,67 @@ SIGNATURES = {
     0x31: 'Visual FoxPro with AutoIncrement field',
     0x43: 'dBASE IV with SQL table and memo file',
     0x7B: 'dBASE IV with memo file',
-    0x83: 'dBASE III+ with memo file',
+    0x83: 'dBASE III with memo file',
     0x8B: 'dBASE IV with memo file',
     0x8E: 'dBASE IV with SQL table',
     0xB3: '.dbv and .dbt memo (Flagship)',
     0xCB: 'dBASE IV with SQL table and memo file',
     0xE5: 'Clipper SIX driver with SMT memo field',
     0xF5: 'FoxPro with memo field',
-    0xFB: 'FoxBase',
+    0xFB: 'FoxPro',
 }
 
 SUPPORTED_SIGNATURES = (0x03, 0x04, 0x05)
 
+# <   -- little endian
+# B   -- version number (signature)
+# 3B  -- last update (YY, MM, DD)
+# L   -- number of records
+# H   -- length of header
+# H   -- length of each record
+# 17x -- pad (2B -- reserved, 
+#              B -- incomplete transaction, 
+#              B -- encryption flag, 
+#             4B -- free record thread (reserved for LAN)
+#             8B -- reserved for multiuser dBASE
+#              B -- MDX flag)
+# B   -- language driver
+# 2x  -- pad (2B -- reserved)
+HEADER_FORMAT = '<B3BLHH17xB2x'
+
+# <   -- little endian
+# 11s -- field name in ASCII (terminated by 0x00)
+# c   -- field type (ASCII)
+# 4x  -- field data address ( 2B -- address in memory (for dBASE) 
+#                          OR 4B -- offset of field from 
+#                                   beginning of record (for FoxPro)
+# B   -- field length
+# B   -- decimal count
+# 14x -- pad (2B -- reserved for multi-user dBASE,
+#              B -- work area id ()
+#             2B -- reserved for multi-user dBASE,
+#              B -- flag for SET FIELDS
+#             7B -- reserved
+#              B -- index field flag)
+# B   -- language driver
+# 2x  -- pad (2B -- reserved)
+FIELD_DESCRIPTION_FORMAT = '<11sc4xBB14x'
+
 def dbf2date(dbf_str):
     '''
-    Convert from dbf-string date to datetime.date
+    Convert date from dbf-string to datetime.date
     @param dbf_str: string in format YYYYMMDD
     @return: datetime.date instance
     '''
-    if dbf_str is None or not dbf_str.isdigit():
-        y, m, d = 1900, 1, 1
-        return datetime.date(y, m, d)
-        #raise ValueError("'%s' consist of non-int value" % dbf_str)
-    if len(dbf_str) == 8:
-        y, m, d = int(dbf_str[:4]), int(dbf_str[4:6]), int(dbf_str[6:8])
+    if dbf_str is None or not dbf_str.isdigit() or len(dbf_str) != 8:
+        result = None
     else:
-        y, m, d = 2200, 1, 1
-    return datetime.date(y,m,d)    
+        result = datetime.date(int(dbf_str[:4]), int(dbf_str[4:6]), int(dbf_str[6:8]))
+    return result
 
 def date2dbf(dt):
     '''
-    Convert from datetime.date to dbf-string date
+    Convert date from datetime.date to dbf-string
     @param dt: datetime.date instance
     @return: string in format YYYYMMDD
     '''
@@ -97,25 +131,19 @@ def date2dbf(dt):
     
 def dbf2str(dbf_str):
     '''
-    Convert from dbf-string to string date (DD.MM.YYYY)
+    Convert date from dbf-string to string (DD.MM.YYYY)
     @param dbf_str: string in format YYYYMMDD
     @return: string in format DD.MM.YYYY
     '''
-    
-    """'YYYYMMDD' -> 'DD.MM.YYYY'"""
-    if dbf_str is None or not dbf_str.isdigit():
-        y, m, d = '1900', '01', '01'
-        return '.'.join((d,m,y))
-        #raise ValueError("'%s' consist of non-int value" % dbf_str)
-    if len(dbf_str) == 8:
-        y, m, d = dbf_str[:4], dbf_str[4:6], dbf_str[6:8]
+    if dbf_str is None or not dbf_str.isdigit() or len(dbf_str) != 8:
+        result = None
     else:
-        y, m, d = '2200', '01', '01'
-    return '.'.join((d,m,y))
+        result = ".".join( reversed( (dbf_str[:4], dbf_str[4:6], dbf_str[6:8]) ) )
+    return result
 
 def str2dbf(dt_str):
     '''
-    Convert from string date to dbf-string date
+    Convert from string to dbf-string date
     @param dt_str: string in format DD.MM.YYYY
     @return: dbf-string date (string in format YYYYMMDD)
     '''
