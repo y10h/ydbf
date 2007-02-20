@@ -28,9 +28,9 @@ import itertools
 
 from ydbf import lib
 
-class YDbfReader(object):
+class YDbfBasicReader(object):
     '''
-    Class for reading DBF
+    Basic class for reading DBF
     '''
     def __init__(self, fh):
         '''
@@ -62,6 +62,10 @@ class YDbfReader(object):
         sig, year, month, day, numrec, lenheader, recsize, lang = struct.unpack(
             lib.HEADER_FORMAT,
             self.fh.read(32))
+        self.sig = sig
+        if sig not in lib.SUPPORTED_SIGNATURES:
+            version = lib.SIGNATURES.get(sig, 'UNKNOWN')
+            raise lib.DbfError("DBF version '%s' (signature %s) not supported" % (version, hex(sig)))
         
         numfields = (lenheader - 33) // 32
         fields = []
@@ -74,6 +78,7 @@ class YDbfReader(object):
         assert terminator == '\x0d', "Terminator must be 0x0d"
                 
         fields.insert(0, ('DeletionFlag', 'C', 1, 0))
+        self.raw_lang = lang
         self._fields = fields  # with DeletionFlag
         self.fields = fields[1:] # without DeletionFlag
         self.recfmt = ''.join(['%ds' % fld[2] for fld in fields])
@@ -116,7 +121,7 @@ class YDbfReader(object):
         types_in_list = [t in ('N', 'D', 'L', 'C') for n, t, s, d in self._fields]
         if False in types_in_list and raise_on_unknown_type:
             idx = types_in_list.index(False)
-            raise ValueError("Unknown dbf-type: %s in field %s" % \
+            raise lib.DbfTypeError("Unknown dbf-type: %s in field %s" % \
                     (self._fields[idx][1], self._fields[idx][0]))
         actions = {
             'D': lambda val: self.dbf2date(val.strip()),
@@ -148,6 +153,109 @@ class YDbfReader(object):
                     if conv
                     ]
             except (IndexError, ValueError, TypeError), err:
-                    raise RuntimeError("Error occured while reading value '%s' from field '%s' (rec #%d)" % \
+                    raise lib.DbfError("Error occured while reading value '%s' from field '%s' (rec #%d)" % \
                             (val, self._fields[idx][0], self.i))
             yield res
+
+class YDbfStrictReader(YDbfBasicReader):
+    def __init__(self, fh):
+        super(YDbfStrictReader, self).__init__(fh)
+        self.checkConsistency()
+
+    def checkConsistency(self):
+        ## check records
+        assert self.recsize >1, "Length of record must be >1"
+        if self.sig in (0x03, 0x04): 
+            assert self.recsize < 4000, "Length of record must be <4000 B for dBASE III and IV"
+        assert self.recsize < 32*1024, "Length of record must be <32KB"
+        assert self.numrec >= 0, "Number of records must be non-negative"
+
+        ## check fields
+        assert self.numfields > 0, "The dbf file must have at least one field"
+        if self.sig == 0x03:
+            assert self.numfields < 128, "Number of fields in dBASE III must be <128"
+        if self.sig == 0x04:
+            assert self.numfields < 256, "Number of fields in dBASE IV must be <256"
+
+        ## check fields, round 2
+        for f_name, f_type, f_size, f_decimal in self.fields:
+            if f_type == 'N':
+                assert f_size < 20, "Size of numeral field must be <20 (field '%s', size %d)" % (f_name, f_size)
+            if f_type == 'C':
+                assert f_size < 255, "Size of numeral field must be <255 (field '%s', size %d)" % (f_name, f_size)
+            if f_type == 'L':
+                assert f_size == 1, "Size of logical field must be 1 (field '%s', size %d)" % (f_name, f_size)
+
+        ## check size, if available
+        file_name = getattr(self.fh, 'name', None)
+        if file_name is not None:
+            import os
+            try:
+                os_size = os.stat(file_name)[6]
+            except OSError, msg:
+                return
+            dbf_size = long(self.lenheader + 1 + self.numrec*self.recsize)
+            assert os_size == dbf_size
+
+class UnicodeConverter(object):
+    def __init__(self, default_encoding='ascii', overwrite_encoding=False, raw_lang=0x00):
+        if overwrite_encoding:
+            self.encoding = default_encoding
+        else:
+            self.encoding = lib.ENCODINGS.get(raw_lang, default_encoding)
+
+    def __call__(self, records_iterator):
+        provide_unicode = lambda x, enc: (isinstance(x, str) and unicode(x, enc)) or x
+        encoding = self.encoding
+        for record in records_iterator:
+            yield [provide_unicode(x, encoding) for x in record]
+
+class DictConverter(object):
+    def __init__(self, fields_struct):
+        self.fields = fields_struct
+
+    def __call__(self, records_iterator):
+        fields = self.fields
+        for record in records_iterator:
+            record_dict = {}
+            for (f_name, f_type, f_size, f_decimal), value in itertools.izip(fields, record):
+	        record_dict[f_name] = value
+	    yield record_dict
+            
+class YDbfReader(object):
+    def __init__(self, fh, **kwargs):
+        use_unicode = kwargs.get('use_unicode', False)
+        default_encoding = kwargs.get('default_encoding', 'ascii')
+        overwrite_encoding = kwargs.get('overwrite_encoding', False)
+        as_dict = kwargs.get('as_dict', False)
+        strict = kwargs.get('strict', True)
+
+        if strict:
+            self.reader = YDbfStrictReader(fh)
+        else:
+            self.reader = YDbfBasicReader(fh)
+
+        null_converter = lambda xiter: (x for x in xiter)
+        
+        if use_unicode:
+            self.unicode_converter = UnicodeConverter(default_encoding, overwrite_encoding, self.reader.raw_lang)
+        else:
+            self.unicode_converter = null_converter
+
+        if as_dict:
+            self.dict_converter = DictConverter(self.reader.fields)
+        else:
+            self.dict_converter = null_converter
+        
+        # backward compability
+        self.dbf2date = self.reader.dbf2date
+        for key in self.reader.__dict__.keys():
+            attr = getattr(self.reader, key)
+            if not callable(attr):
+                setattr(self, key, attr)
+
+    def __call__(self, *args, **kwargs):
+        return self.dict_converter(self.unicode_converter(self.reader(*args, **kwargs)))
+
+    def __len__(self):
+        return len(self.reader)

@@ -155,6 +155,17 @@ def str2dbf(dt_str):
     d, m, y = dt_str.split('.')
     return ''.join((y,m,d))
 
+# Exceptions
+
+class DbfError(Exception):
+    pass
+
+class DbfTypeError(DbfError):
+    pass
+
+class DbfConsistencyError(DbfError):
+    pass
+
 # References:
 # [dbfspec]: http://www.clicketyclick.dk/~clicketyclick_dk/databases/xbase/format/index.html
 # [rudbfspec]: http://inform.p-stone.ru/libr/db/teoretic/data/public1/
