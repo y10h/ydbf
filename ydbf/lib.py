@@ -25,9 +25,21 @@ __url__ = "$URL$"
 
 import datetime
 
+
+# Exceptions
+
+class DbfError(Exception):
+    pass
+
+class DbfTypeError(DbfError):
+    pass
+
+# Reference data
+
 ENCODINGS = {
     # got from dbf description [dbfspec], [rudbfspec]
     # id      name      description
+    0x00:    ('ascii', 'ASCII'), # internal use
     0x01:    ('cp437', 'DOS USA'),
     0x02:    ('cp850', 'DOS Multilingual'),
     0x03:    ('cp1252', 'Windows ANSI'),
@@ -107,6 +119,8 @@ HEADER_FORMAT = '<B3BLHH17xB2x'
 # 2x  -- pad (2B -- reserved)
 FIELD_DESCRIPTION_FORMAT = '<11sc4xBB14x'
 
+# Common functions
+
 def dbf2date(dbf_str):
     '''
     Convert date from dbf-string to datetime.date
@@ -154,17 +168,6 @@ def str2dbf(dt_str):
         raise ValueError('Datestring must be 10 symbols (DD.MM.YYYY) length instead of %d' % str_l)    
     d, m, y = dt_str.split('.')
     return ''.join((y,m,d))
-
-# Exceptions
-
-class DbfError(Exception):
-    pass
-
-class DbfTypeError(DbfError):
-    pass
-
-class DbfConsistencyError(DbfError):
-    pass
 
 # References:
 # [dbfspec]: http://www.clicketyclick.dk/~clicketyclick_dk/databases/xbase/format/index.html

@@ -22,6 +22,8 @@ DBF reader
 """
 __revision__ = "$Id$"
 __url__ = "$URL$"
+__all__ = ["YDbfBasicReader", "YDbfStrictReader", "YDbfReader"]
+
 
 import struct
 import itertools
@@ -29,14 +31,17 @@ import itertools
 from ydbf import lib
 
 class YDbfBasicReader(object):
-    '''
+    """
     Basic class for reading DBF
-    '''
+    
+    Instance is an iterator over DBF records
+    
+    @param fh: filehandler (should be opened for binary reads)
+    """
     def __init__(self, fh):
-        '''
-        Iterator over DBF records
-        @param fh: filehandler (should be opened for binary reads)
-        '''
+        """
+        Constructor
+        """
         self.fh = fh             # filehandler
         self.numrec = 0          # number of records
         self.lenheader = 0       # length of header
@@ -54,9 +59,9 @@ class YDbfBasicReader(object):
         self.readHeader()
 
     def readHeader(self):
-        '''
+        """
         Read DBF header
-        ''' 
+        """ 
         self.fh.seek(0)
 
         sig, year, month, day, numrec, lenheader, recsize, lang = struct.unpack(
@@ -90,21 +95,21 @@ class YDbfBasicReader(object):
         self.field_names = [fld[0] for fld in self.fields]
     
     def __len__(self):
-        '''
+        """
         Get number of records in DBF
         @return: number of records (integer)
-        '''
+        """
         return self.numrec
     
     def __call__(self, start_from=None, limit=None, raise_on_unknown_type=False):
-        '''
+        """
         Get iterator
         @param start_from: index of record start from (optional)
         @param limit: limits number of iterated records (optional)
         @param raise_on_unknown_type: raise or not exception for unknown type
             of field
         @return: iterator over records
-        '''
+        """
         if start_from is not None:
             self.start_from = start_from
         offset = self.lenheader + self.recsize*self.start_from
@@ -158,11 +163,24 @@ class YDbfBasicReader(object):
             yield res
 
 class YDbfStrictReader(YDbfBasicReader):
+    """
+    DBF-reader with additional checks
+    """
     def __init__(self, fh):
+        """
+        Create strict DBF-reader
+        
+        @param fh: filehandler (should be opened for binary reads)
+        """
         super(YDbfStrictReader, self).__init__(fh)
         self.checkConsistency()
 
     def checkConsistency(self):
+        """
+        Some checks of DBF structure
+        
+        @raise AssertionError: if some check failed
+        """
         ## check records
         assert self.recsize >1, "Length of record must be >1"
         if self.sig in (0x03, 0x04): 
@@ -198,32 +216,96 @@ class YDbfStrictReader(YDbfBasicReader):
             assert os_size == dbf_size
 
 class UnicodeConverter(object):
+    """
+    Unicode converter which converts all strings to unicode,
+    using lang code in DBF file, or implicitly specified encoding
+    """
     def __init__(self, default_encoding='ascii', overwrite_encoding=False, raw_lang=0x00):
+        """
+        Create unicode converter for DBF reader
+        
+        @param default_encoding: default encoding (default ascii) for strings 
+            (if lang code in DBF is not found)
+        @type default_encoding: C{str}
+        
+        @param overwrite_encoding: overwrite lang code by default encoding, default False
+        @type overwrite_encoding: C{boolean}
+        
+        @param raw_lang: lang code from DBF file, default 0x00 (i.e. absence of lang code)
+        @type raw_lang: C{int}
+        """
         if overwrite_encoding:
             self.encoding = default_encoding
         else:
             self.encoding = lib.ENCODINGS.get(raw_lang, default_encoding)
 
     def __call__(self, records_iterator):
+        """
+        Convert strings to unicode
+        """
         provide_unicode = lambda x, enc: (isinstance(x, str) and unicode(x, enc)) or x
         encoding = self.encoding
         for record in records_iterator:
             yield [provide_unicode(x, encoding) for x in record]
 
 class DictConverter(object):
+    """
+    Convert from list to dict each record.
+    Must be the last converter in chain.
+    
+    @param fields_struct: structure of DBF file
+    """
     def __init__(self, fields_struct):
+        """
+        Create dict converter
+        """
         self.fields = fields_struct
 
     def __call__(self, records_iterator):
+        """
+        Convert to dict each record
+        
+        @param records_iterator: iterator over DBF records
+        """
         fields = self.fields
         for record in records_iterator:
             record_dict = {}
             for (f_name, f_type, f_size, f_decimal), value in itertools.izip(fields, record):
-	        record_dict[f_name] = value
-	    yield record_dict
+                record_dict[f_name] = value
+            yield record_dict
             
 class YDbfReader(object):
+    """
+    Most common DBF reader
+        @param fh: filehandler (should be opened for binary reads)
+        
+        @param use_unicode: use unicode instead of strings, default False
+        @type use_unicode: C{boolean}
+        
+        @param default_encoding: default encoding for DBF file,
+            default 'ascii',
+            uses with C{use_unicode} option
+        @type default_encoding: C{str}
+        
+        @param overwrite_encoding: overwrite encoding specified
+            in DBF file (lang code) by default value 
+            (see C{default_encoding} option), default False,
+            uses with C{use_unicode} option
+        @type overwrite_encoding: C{boolean}
+        
+        @param as_dict: represent each record as dict instead of list,
+            defult False
+        @type as_dict: C{boolean}
+        
+        @param strict: make some checks of internal DBF structure,
+            default True
+        @type strict: C{boolean}
+    """
+    
     def __init__(self, fh, **kwargs):
+        """
+        Create DBF reader
+        """
         use_unicode = kwargs.get('use_unicode', False)
         default_encoding = kwargs.get('default_encoding', 'ascii')
         overwrite_encoding = kwargs.get('overwrite_encoding', False)
@@ -246,16 +328,25 @@ class YDbfReader(object):
             self.dict_converter = DictConverter(self.reader.fields)
         else:
             self.dict_converter = null_converter
-        
-        # backward compability
-        self.dbf2date = self.reader.dbf2date
-        for key in self.reader.__dict__.keys():
-            attr = getattr(self.reader, key)
-            if not callable(attr):
-                setattr(self, key, attr)
 
     def __call__(self, *args, **kwargs):
+        """
+        Get iterator over DBF records
+        """
         return self.dict_converter(self.unicode_converter(self.reader(*args, **kwargs)))
 
-    def __len__(self):
+    def __len__(self): 
         return len(self.reader)
+
+    def __getattr__(self, attr):
+        if attr in self.__dict__ or attr in ('reader', 'unicode_converter', 'dict_converter',):
+            return self.__dict__[attr]
+        else:
+            return getattr(self.__dict__['reader'], attr)
+    
+    def __setattr__(self, attr, val):
+        if attr in self.__dict__ or attr in ('reader', 'unicode_converter', 'dict_converter',):
+            self.__dict__[attr] = val
+        else:
+            setattr(self.__dict__['reader'], attr, val)
+

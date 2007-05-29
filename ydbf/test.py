@@ -116,6 +116,11 @@ class TestYdbfWriter(unittest.TestCase):
                                [113, 1.01,  'del', datetime.date(2006, 12, 23), False],
                                [7436, 0.5,  'ex.', datetime.date(2006,  7, 15),  True],
                               ]
+        self.reference_data_dict = [
+        {'INT_FLD':  25, 'FLT_FLD':12.34, 'CHR_FLD':'test', 'DTE_FLD':datetime.date(2006,  5,  7), 'BLN_FLD':True},
+        {'INT_FLD': 113, 'FLT_FLD': 1.01, 'CHR_FLD': 'del', 'DTE_FLD':datetime.date(2006, 12, 23), 'BLN_FLD':False},
+        {'INT_FLD':7436, 'FLT_FLD': 0.5,  'CHR_FLD': 'ex.', 'DTE_FLD':datetime.date(2006,  7, 15), 'BLN_FLD':True},
+        ]
         self.fields = [('INT_FLD',      'N', 4, 0),
                        ('FLT_FLD',      'N', 5, 2),
                        ('CHR_FLD',      'C', 6, 0),
@@ -123,6 +128,7 @@ class TestYdbfWriter(unittest.TestCase):
                        ('BLN_FLD',      'L', 1, 0)]
         self.fh = StringIO()
         self.dbf = YDbfWriter(self.fh, self.fields)
+        self.dbf_dict = YDbfWriter(self.fh, self.fields, as_dict=True)
         
     
     def test_header(self):
@@ -131,7 +137,7 @@ class TestYdbfWriter(unittest.TestCase):
         self.assertEqual(self.dbf.lenheader, 193)
         self.assertEqual(self.dbf.recsize, 25)
         self.assertEqual(self.dbf.numfields, 5)
-        self.assertEqual(self.dbf.ver, 3)
+        self.assertEqual(self.dbf.sig, 3)
 
     def test_date2dbf(self):
         self.assertEqual(self.dbf.date2dbf, date2dbf)
@@ -144,7 +150,15 @@ class TestYdbfWriter(unittest.TestCase):
         self.fh.seek(0)
         data = self.fh.read()
         self.assertEqual(data, self.dbf_reference_data)
+    
+    def test_call_as_dict(self):
+        self.dbf_dict.now = datetime.date(2006, 6, 19)
+        self.assertEqual(self.dbf_dict.now, datetime.date(2006, 6, 19))
+        self.dbf_dict(self.reference_data_dict)
+        self.assertEqual(self.dbf_dict.numrec, 3)
+        self.fh.seek(0)
+        data = self.fh.read()
+        self.assertEqual(data, self.dbf_reference_data)
 
-        
 if __name__ == '__main__':
     unittest.main()
