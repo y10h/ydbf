@@ -141,7 +141,7 @@ def date2dbf(dt):
     '''
     if not isinstance(dt, datetime.date):
         raise TypeError("Espects datetime.date instead of %s" % type(dt))
-    return dt.strftime("%Y%m%d")
+    return "%04d%02d%02d" % (dt.year, dt.month, dt.day)
     
 def dbf2str(dbf_str):
     '''
