@@ -130,10 +130,10 @@ class YDbfBasicReader(object):
                     (self._fields[idx][1], self._fields[idx][0]))
         actions = {
             'D': lambda val: self.dbf2date(val.strip()),
-            'L': lambda val: logic.get(val),
+            'L': lambda val: logic.get(val.strip()),
             'C': lambda val: val.strip(),
-            'N': lambda val: int(val),
-            'ND': lambda val: float(val),
+            'N': lambda val: (val.strip() or 0) and int(val),
+            'ND': lambda val: (val.strip() or 0.0) and float(val),
             'DeletionFlag': None,
             }
         converters = [
