@@ -117,6 +117,7 @@ class YDbfBasicWriter(object):
         self.writeHeader()
         # End of file
         self.fh.write('\x1A')
+        self.fh.flush()
 
 class DictDeconverter(object):
     """
@@ -154,11 +155,7 @@ class UnicodeDeconverter(object):
         @param encoding: encoding (default ascii, 0x0 lang code in DBF) for strings 
         @type encoding: C{str}
         """
-        self.encoding = default_encoding
-        if overwrite_raw_lang:
-            self.raw_lang = raw_lang
-        else:
-            self.raw_lang = lib.REVERSE_ENCODINGS.get(default_encoding, raw_lang)
+        self.encoding = encoding
 
     def __call__(self, records_iterator):
         """
@@ -167,7 +164,7 @@ class UnicodeDeconverter(object):
         provide_str = lambda x, enc: (isinstance(x, unicode) and x.encode(encoding)) or x
         encoding = self.encoding
         for record in records_iterator:
-            yield [provide_unicode(x, encoding) for x in record]
+            yield [provide_str(x, encoding) for x in record]
 
 class YDbfWriter(object):
     """
@@ -222,7 +219,7 @@ class YDbfWriter(object):
         """
         Write records to DBF
         """
-        self.writer(self.dict_deconverter(self.unicode_deconverter(records, *args, **kwargs)))
+        self.writer(self.unicode_deconverter(self.dict_deconverter(records, *args, **kwargs)))
     
     def __getattr__(self, attr):
         if attr in self.__dict__ or attr in ('writer', 'unicode_deconverter', 'dict_deconverter',):
