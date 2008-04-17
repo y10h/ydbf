@@ -24,7 +24,11 @@ __revision__ = "$Id$"
 __url__ = "$URL$"
 __all__ = ["YDbfBasicReader", "YDbfStrictReader", "YDbfReader"]
 
+<<<<<<< local
+import datetime
+=======
 
+>>>>>>> other
 import struct
 import itertools
 
@@ -53,7 +57,7 @@ class YDbfBasicReader(object):
         self.recfmt = ''         # struct-format of rec
         self.recsize = 0         # size of each record (in bytes)
         self.i = 0               # current item in iterator
-        
+        self.dt = None           # date of file creation
         self.dbf2date = lib.dbf2date # function for conversion from dbf to date
 
         self.readHeader()
@@ -67,6 +71,7 @@ class YDbfBasicReader(object):
         sig, year, month, day, numrec, lenheader, recsize, lang = struct.unpack(
             lib.HEADER_FORMAT,
             self.fh.read(32))
+        self.dt = datetime.date(year, month, day)
         self.sig = sig
         if sig not in lib.SUPPORTED_SIGNATURES:
             version = lib.SIGNATURES.get(sig, 'UNKNOWN')
