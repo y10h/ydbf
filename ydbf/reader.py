@@ -24,11 +24,7 @@ __revision__ = "$Id$"
 __url__ = "$URL$"
 __all__ = ["YDbfBasicReader", "YDbfStrictReader", "YDbfReader"]
 
-<<<<<<< local
 import datetime
-=======
-
->>>>>>> other
 import struct
 import itertools
 
@@ -136,7 +132,7 @@ class YDbfBasicReader(object):
         actions = {
             'D': lambda val: self.dbf2date(val.strip()),
             'L': lambda val: logic.get(val.strip()),
-            'C': lambda val: val.strip(),
+            'C': lambda val: val.rstrip(),
             'N': lambda val: (val.strip() or 0) and int(val),
             'ND': lambda val: (val.strip() or 0.0) and float(val),
             'DeletionFlag': None,
