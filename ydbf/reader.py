@@ -4,9 +4,9 @@
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/362715
 #
 # Copyright (C) 2006 Yury Yurevich, Alexandr Zamaraev
-# Copyright (C) 2007 Yury Yurevich
+# Copyright (C) 2007-2008 Yury Yurevich
 #
-# http://gorod-omsk.ru/blog/pythy/projects/ydbf/
+# http://www.pyobject.ru/projects/ydbf/
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,8 +20,6 @@
 """
 DBF reader
 """
-__revision__ = "$Id$"
-__url__ = "$URL$"
 __all__ = ["YDbfBasicReader", "YDbfStrictReader", "YDbfReader"]
 
 import datetime

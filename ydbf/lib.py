@@ -4,9 +4,9 @@
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/362715
 #
 # Copyright (C) 2006 Yury Yurevich, Alexandr Zamaraev
-# Copyright (C) 2007 Yury Yurevich
+# Copyright (C) 2007-2008 Yury Yurevich
 #
-# http://gorod-omsk.ru/blog/pythy/projects/ydbf/
+# http://www.pyobject.ru/projects/ydbf/
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,8 +20,6 @@
 """
 Common lib for both reader and writer
 """
-__revision__ = "$Id$"
-__url__ = "$URL$"
 
 import datetime
 
@@ -37,7 +35,7 @@ class DbfTypeError(DbfError):
 # Reference data
 
 ENCODINGS = {
-    # got from dbf description [dbfspec], [rudbfspec]
+    # got from dbf description [dbfspec]
     # id      name      description
     0x00:    ('ascii', 'ASCII'), # internal use
     0x01:    ('cp437', 'DOS USA'),
@@ -170,5 +168,5 @@ def str2dbf(dt_str):
     return ''.join((y,m,d))
 
 # References:
-# [dbfspec]: http://www.clicketyclick.dk/~clicketyclick_dk/databases/xbase/format/index.html
-# [rudbfspec]: http://inform.p-stone.ru/libr/db/teoretic/data/public1/
+# [dbfspec]: http://www.clicketyclick.dk/databases/xbase/format/index.html
+
