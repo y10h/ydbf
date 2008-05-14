@@ -65,6 +65,10 @@ class YDbfBasicReader(object):
         sig, year, month, day, numrec, lenheader, recsize, lang = struct.unpack(
             lib.HEADER_FORMAT,
             self.fh.read(32))
+        year = year + 1900
+        # some software use 0x08 as 2008 instead of 0x6c
+        if year < 1950:
+            year = year+100
         self.dt = datetime.date(year, month, day)
         self.sig = sig
         if sig not in lib.SUPPORTED_SIGNATURES:
