@@ -71,6 +71,15 @@ class TestYdbfReader(unittest.TestCase):
         self.fh = StringIO(self.dbf_data)
         self.dbf = YDbfReader(self.fh)
 
+    def test_constructor(self):
+        """
+        Unit-test for reader's constructor
+        """
+        self.assertEquals(YDbfReader(StringIO(self.dbf_data)).raw_lang, 0)
+        self.assertEquals(YDbfReader(StringIO(self.dbf_data), use_unicode=True).raw_lang, 0)
+        self.assertEquals(YDbfReader(StringIO(self.dbf_data), as_dict=True).raw_lang, 0)
+        self.assertEquals(YDbfReader(StringIO(self.dbf_data), as_dict=True, use_unicode=True).raw_lang, 0)
+
     def test_dbf2date(self):
         self.assertEqual(self.dbf.dbf2date, dbf2date)
 
