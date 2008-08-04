@@ -237,10 +237,11 @@ class UnicodeConverter(object):
         @param raw_lang: lang code from DBF file, default 0x00 (i.e. absence of lang code)
         @type raw_lang: C{int}
         """
-        if overwrite_encoding:
+        encoding_info = lib.ENCODINGS.get(raw_lang)
+        if overwrite_encoding or not encoding_info:
             self.encoding = default_encoding
         else:
-            self.encoding = lib.ENCODINGS.get(raw_lang, default_encoding)
+            self.encoding = encoding_info[0]
 
     def __call__(self, records_iterator):
         """

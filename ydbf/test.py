@@ -79,6 +79,7 @@ class TestYdbfReader(unittest.TestCase):
         self.assertEquals(YDbfReader(StringIO(self.dbf_data), use_unicode=True).raw_lang, 0)
         self.assertEquals(YDbfReader(StringIO(self.dbf_data), as_dict=True).raw_lang, 0)
         self.assertEquals(YDbfReader(StringIO(self.dbf_data), as_dict=True, use_unicode=True).raw_lang, 0)
+        self.assertEquals(YDbfReader(StringIO(self.dbf_data), as_dict=True, use_unicode=True).unicode_converter.encoding, 'ascii')
 
     def test_dbf2date(self):
         self.assertEqual(self.dbf.dbf2date, dbf2date)
