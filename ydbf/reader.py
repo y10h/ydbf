@@ -185,7 +185,7 @@ class YDbfStrictReader(YDbfBasicReader):
         """
         ## check records
         assert self.recsize >1, "Length of record must be >1"
-        if self.sig in (0x03, 0x04): 
+        if self.sig in (0x03, 0x04):
             assert self.recsize < 4000, "Length of record must be <4000 B for dBASE III and IV"
         assert self.recsize < 32*1024, "Length of record must be <32KB"
         assert self.numrec >= 0, "Number of records must be non-negative"
@@ -226,7 +226,7 @@ class UnicodeConverter(object):
         """
         Create unicode converter for DBF reader
         
-        @param default_encoding: default encoding (default ascii) for strings 
+        @param default_encoding: default encoding (default ascii) for strings
             (if lang code in DBF is not found)
         @type default_encoding: C{str}
         
@@ -338,7 +338,7 @@ class YDbfReader(object):
         """
         return self.dict_converter(self.unicode_converter(self.reader(*args, **kwargs)))
 
-    def __len__(self): 
+    def __len__(self):
         return len(self.reader)
 
     def __getattr__(self, attr):

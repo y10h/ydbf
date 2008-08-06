@@ -77,7 +77,7 @@ class YDbfBasicWriter(object):
     def __call__(self, records):
         """
         Run DBF-creator
-        @param records: iterator over records 
+        @param records: iterator over records
             (each record is tuple or sequense of values)
         """
         self.writeHeader()
@@ -149,7 +149,7 @@ class UnicodeDeconverter(object):
         """
         Create unicode deconverter for DBF writer
         
-        @param encoding: encoding (default ascii, 0x0 lang code in DBF) for strings 
+        @param encoding: encoding (default ascii, 0x0 lang code in DBF) for strings
         @type encoding: C{str}
         """
         self.encoding = encoding

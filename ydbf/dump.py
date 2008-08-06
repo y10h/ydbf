@@ -31,12 +31,12 @@ def parse_options(args):
     Parse options
     """
     parser = OptionParser(usage="%prog [options] files", version="%%prog %s" % VERSION)
-    parser.add_option('-r', '--rs', 
+    parser.add_option('-r', '--rs',
                            dest='record_separator',
                            type='string',
                            default='\n',
                            help='output record separator [default newline]')
-    parser.add_option('-f', '--fs', 
+    parser.add_option('-f', '--fs',
                            dest='field_separator',
                            default=':',
                            help='output field separator [default colon]',
@@ -47,13 +47,13 @@ def parse_options(args):
                            type='string',
                            help='comma separated list of fields to print [default all]',
                            )
-    parser.add_option('-u', '--undef', 
+    parser.add_option('-u', '--undef',
                            dest='undef',
                            type='string',
                            default='',
                            help='string to print for NULL values [default emptystring]'
                            ),
-    parser.add_option('-t', '--table', 
+    parser.add_option('-t', '--table',
                            dest='table',
                            action='store_true',
                            default=False,
@@ -66,7 +66,7 @@ def parse_options(args):
                            )
     options, args = parser.parse_args(args)
     if not args:
-        parser.error('Files is required argument')       
+        parser.error('Files is required argument')
     return options, args
 
 def csv_output_generator(data_iterator, record_separator, field_separator):
@@ -113,7 +113,7 @@ def _filter_fields(data_iterator, dbf_fields, fields_to_show):
     for rec in data_iterator:
         filtered_rec = tuple(
             value 
-            for (name, type_, length, dec), value in zip(dbf_fields, rec) 
+            for (name, type_, length, dec), value in zip(dbf_fields, rec)
             if name.lower() in fields_to_show
         )
         yield filtered_rec
@@ -125,7 +125,7 @@ def dbf_data(fh, fields=None):
     if fields:
         fields_to_show = [f.lower() for f in fields]
         fields_spec = [f for f in reader.fields if f[0].lower() in fields_to_show]
-        generator = _filter_fields(reader(), reader.fields, fields_to_show)        
+        generator = _filter_fields(reader(), reader.fields, fields_to_show)
     else:
         fields_spec = reader.fields
         generator = reader()

@@ -88,8 +88,8 @@ SUPPORTED_SIGNATURES = (0x03, 0x04, 0x05)
 # L   -- number of records
 # H   -- length of header
 # H   -- length of each record
-# 17x -- pad (2B -- reserved, 
-#              B -- incomplete transaction, 
+# 17x -- pad (2B -- reserved,
+#              B -- incomplete transaction,
 #              B -- encryption flag, 
 #             4B -- free record thread (reserved for LAN)
 #             8B -- reserved for multiuser dBASE
@@ -101,8 +101,8 @@ HEADER_FORMAT = '<B3BLHH17xB2x'
 # <   -- little endian
 # 11s -- field name in ASCII (terminated by 0x00)
 # c   -- field type (ASCII)
-# 4x  -- field data address ( 2B -- address in memory (for dBASE) 
-#                          OR 4B -- offset of field from 
+# 4x  -- field data address ( 2B -- address in memory (for dBASE)
+#                          OR 4B -- offset of field from
 #                                   beginning of record (for FoxPro)
 # B   -- field length
 # B   -- decimal count
@@ -162,7 +162,7 @@ def str2dbf(dt_str):
         raise TypeError("Espects string or unicode instead of %s" % type(dt_str))
     str_l = len(dt_str)
     if str_l != 10:
-        raise ValueError('Datestring must be 10 symbols (DD.MM.YYYY) length instead of %d' % str_l)    
+        raise ValueError('Datestring must be 10 symbols (DD.MM.YYYY) length instead of %d' % str_l)
     d, m, y = dt_str.split('.')
     return ''.join((y,m,d))
 
