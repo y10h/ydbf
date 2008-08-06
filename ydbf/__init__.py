@@ -3,8 +3,7 @@
 # Inspired by code of Raymond Hettinger
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/362715
 #
-# Copyright (C) 2006 Yury Yurevich, Alexandr Zamaraev
-# Copyright (C) 2007-2008 Yury Yurevich
+# Copyright (C) 2006-2008 Yury Yurevich and contributors
 #
 # http://www.pyobject.ru/projects/ydbf/
 #
@@ -20,6 +19,6 @@
 """
 YDbf reader-writer
 """
-
+VERSION = '0.0.1dev'
 from ydbf.reader import YDbfReader
 from ydbf.writer import YDbfWriter
