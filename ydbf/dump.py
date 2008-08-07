@@ -22,7 +22,7 @@ YDbf dumper script
 """
 import sys
 from optparse import OptionParser
-from ydbf import VERSION
+from ydbf import lib, VERSION
 from ydbf.reader import YDbfStrictReader
 
 def _unescape_separator(option, opt_str, value, parser):
@@ -36,6 +36,42 @@ def _unescape_separator(option, opt_str, value, parser):
     if value is not None:
         value = value.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
     setattr(parser.values, option.dest, value)
+
+def show_info(files):
+    """
+    Show info about files
+    """
+    for f in files:
+        reader = YDbfStrictReader(open(f, 'rb'))
+        header_info = {
+            'filename': f,
+            'signature': hex(reader.sig),
+            'version': lib.SIGNATURES.get(reader.sig, 'N/A'),
+            'lang_code': hex(reader.raw_lang),
+            'encoding': lib.ENCODINGS.get(reader.raw_lang, ('n/a', 'N/A'))[0],
+            'language': lib.ENCODINGS.get(reader.raw_lang, ('n/a', 'N/A'))[1],
+            'records_number': str(reader.numrec),
+            'header_length': str(reader.lenheader),
+            'record_length': str(reader.recsize),
+            'last_change': str(reader.dt),
+            'fields_number': str(reader.numfields),
+        }
+        print """\
+Filename:       %(filename)s
+Version:        %(signature)s (%(version)s)
+Encoding:       %(lang_code)s (%(encoding)s, %(language)s)
+Num of records: %(records_number)s
+Header length:  %(header_length)s
+Record length:  %(record_length)s
+Last change:    %(last_change)s
+Num of fields:  %(fields_number)s
+===========================================
+Num   Name                Type Len  Decimal
+-------------------------------------------""" % header_info
+
+        for i, (name, type_, length, dec) in enumerate(reader.fields):
+            print "% 3d.  %s  %s  %s  %d" % \
+                (i+1, name.ljust(20), type_, str(length).rjust(3), dec)
 
 def parse_options(args):
     """
@@ -80,9 +116,17 @@ def parse_options(args):
                            default='',
                            help='output file'
                            )
+    parser.add_option('-i', '--info',
+                           dest='info',
+                           action='store_true',
+                           default=False,
+                           help='show info about file and exit'),
     options, args = parser.parse_args(args)
     if not args:
         parser.error('Files is required argument')
+    if options.info:
+        show_info(args)
+        sys.exit(0)
     return options, args
 
 def csv_output_generator(data_iterator, record_separator, field_separator):
