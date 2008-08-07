@@ -19,6 +19,10 @@
 """
 YDbf reader-writer
 """
-VERSION = '0.0.1dev'
+try:
+    import pkg_resources
+    VERSION = pkg_resources.get_distribution('YDbf').version
+except (ImportError, pkg_resources.DistributionNotFound):
+    VERSION = 'N/A'
 from ydbf.reader import YDbfReader
 from ydbf.writer import YDbfWriter
