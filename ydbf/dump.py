@@ -139,6 +139,10 @@ def write_output(output_fh, data_iterator, flush_on_each_record=True):
 
 def dump(args):
     options, args = parse_options(args)
+    if options.output:
+        ofh = open(options.output, 'w')
+    else:
+        ofh = sys.stdout
     for filename in args:
         fh = open(filename, 'rb')
         fields_spec, data_iterator = dbf_data(fh)
@@ -146,10 +150,6 @@ def dump(args):
             output_generator = table_output_generator(fields_spec, data_iterator)
         else:
             output_generator = csv_output_generator(data_iterator, options.record_separator, options.field_separator)
-        if options.output:
-            ofh = open(options.output, 'w')
-        else:
-            ofh = sys.stdout
         write_output(ofh, output_generator)        
         
 if __name__ == '__main__':
