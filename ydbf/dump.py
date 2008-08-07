@@ -208,11 +208,14 @@ def dump(args):
             output_generator = \
                 csv_output_generator(
                         data_iterator,
-                        options.record_separator, 
+                        options.record_separator,
                         options.field_separator
                     )
         write_output(ofh, output_generator)      
-        
-if __name__ == '__main__':
+
+def main():
     dump(sys.argv[1:])
+
+if __name__ == '__main__':
+    main()
 
