@@ -37,6 +37,14 @@ def _unescape_separator(option, opt_str, value, parser):
         value = value.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
     setattr(parser.values, option.dest, value)
 
+def _split_fields(option, opt_str, value, parser):
+    """
+    Split value of option -F (fields) to list of strings
+    """
+    if value:
+        value = tuple(f.upper().strip() for f in value.split(','))
+    setattr(parser.values, option.dest, value)
+
 def show_info(files):
     """
     Show info about files
@@ -95,6 +103,8 @@ def parse_options(args):
                            ),
     parser.add_option('-F', '--fields',
                            dest='fields',
+                           action='callback',
+                           callback=_split_fields,
                            default='',
                            type='string',
                            help='comma separated list of fields to print [default all]',
@@ -183,7 +193,7 @@ def _filter_fields(data_iterator, dbf_fields, fields_to_show):
         filtered_rec = tuple(
             value 
             for (name, type_, length, dec), value in zip(dbf_fields, rec)
-            if name.lower() in fields_to_show
+            if name in fields_to_show
         )
         yield filtered_rec
 
@@ -211,13 +221,17 @@ def dbf_data(fh, fields=None):
     """
     Return a fields spec and data generator
     """
-    # we don't want to use YDbfReader, because
-    # we don't need either as_dict, no use_unicode
     reader = YDbfStrictReader(fh)
     if fields:
-        fields_to_show = [f.lower() for f in fields]
-        fields_spec = [f for f in reader.fields if f[0].lower() in fields_to_show]
-        generator = _filter_fields(reader(), reader.fields, fields_to_show)
+        fields_spec = [f for f in reader.fields if f[0] in fields]
+        if len(fields_spec) != len(fields):
+            # got wrong name in fields
+            difference = tuple(set(fields) - set(f[0] for f in fields_spec))
+            if difference:
+                raise ValueError("Wrong fields: %s" % ', '.join(difference))
+            else:
+                raise ValueError("Wrong fields")
+        generator = _filter_fields(reader(), reader.fields, fields)
     else:
         fields_spec = reader.fields
         generator = reader()
@@ -243,7 +257,7 @@ def dump(args):
         ofh = sys.stdout
     for filename in args:
         fh = open(filename, 'rb')
-        fields_spec, data_iterator = dbf_data(fh)
+        fields_spec, data_iterator = dbf_data(fh, options.fields)
         data_iterator = replace_null(data_iterator, options.undef)
         if options.table:
             output_generator = table_output_generator(fields_spec, data_iterator)
