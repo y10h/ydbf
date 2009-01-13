@@ -91,7 +91,7 @@ class YDbfBasicWriter(object):
                     if value is None:
                         value = 0
                     if deci:
-                        pattern = "%%.%df" % deci # ->%.2f 
+                        pattern = "%%.%df" % deci # ->%.2f
                         value = pattern % value
                     else:
                         value = int(value)

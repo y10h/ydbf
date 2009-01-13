@@ -90,7 +90,7 @@ SUPPORTED_SIGNATURES = (0x03, 0x04, 0x05)
 # H   -- length of each record
 # 17x -- pad (2B -- reserved,
 #              B -- incomplete transaction,
-#              B -- encryption flag, 
+#              B -- encryption flag,
 #             4B -- free record thread (reserved for LAN)
 #             8B -- reserved for multiuser dBASE
 #              B -- MDX flag)

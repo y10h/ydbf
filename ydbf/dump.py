@@ -156,7 +156,7 @@ def table_output_generator(fields_spec, data_iterator):
     header_data = []
     names = []
     # delimiter is similar to field_separator, but used in table
-    delimiter = ' | ' 
+    delimiter = ' | '
     newline = '\n' # maybe better use os.linesep?
     for name, type_, length, dec in fields_spec:
         place_holders.append(
@@ -191,7 +191,7 @@ def _filter_fields(data_iterator, dbf_fields, fields_to_show):
     """
     for rec in data_iterator:
         filtered_rec = tuple(
-            value 
+            value
             for (name, type_, length, dec), value in zip(dbf_fields, rec)
             if name in fields_to_show
         )
@@ -269,7 +269,7 @@ def dump(args):
                         options.record_separator,
                         options.field_separator
                     )
-        write_output(ofh, output_generator)      
+        write_output(ofh, output_generator)
 
 def main():
     dump(sys.argv[1:])

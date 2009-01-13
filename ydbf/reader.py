@@ -58,7 +58,7 @@ class YDbfBasicReader(object):
     def readHeader(self):
         """
         Read DBF header
-        """ 
+        """
         self.fh.seek(0)
 
         sig, year, month, day, numrec, lenheader, recsize, lang = struct.unpack(
@@ -291,7 +291,7 @@ class YDbfReader(object):
         @type default_encoding: C{str}
         
         @param overwrite_encoding: overwrite encoding specified
-            in DBF file (lang code) by default value 
+            in DBF file (lang code) by default value
             (see C{default_encoding} option), default False,
             uses with C{use_unicode} option
         @type overwrite_encoding: C{boolean}
