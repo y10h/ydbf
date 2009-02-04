@@ -103,13 +103,15 @@ class YDbfBasicReader(object):
         """
         return self.numrec
     
-    def __call__(self, start_from=None, limit=None, raise_on_unknown_type=False):
+    def __call__(self, start_from=None, limit=None, raise_on_unknown_type=False,
+                 show_deleted=False):
         """
         Get iterator
         @param start_from: index of record start from (optional)
         @param limit: limits number of iterated records (optional)
         @param raise_on_unknown_type: raise or not exception for unknown type
             of field
+        @param show_deleted: do not skip deleted records (optional)
         @return: iterator over records
         """
         if start_from is not None:
@@ -152,7 +154,7 @@ class YDbfBasicReader(object):
         for i in xrange(self.start_from, self.stop_at):
             record = struct.unpack(self.recfmt, self.fh.read(self.recsize))
             self.i = i
-            if record[0] != ' ':
+            if not show_deleted and record[0] != ' ':
                 continue                        # deleted record
             try:
                 res = [conv(val)
