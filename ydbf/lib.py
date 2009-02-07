@@ -28,7 +28,7 @@ import datetime
 class DbfError(Exception):
     pass
 
-class DbfTypeError(DbfError):
+class DbfTypeError(DbfError, TypeError):
     pass
 
 # Reference data
