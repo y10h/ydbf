@@ -57,6 +57,15 @@ class TestDateConverters(unittest.TestCase):
         self.assertRaises(ValueError, str2dbf, '')
         self.assertRaises(ValueError, str2dbf, '06/05/2006')
 
+    def test_olddates(self):
+        """
+        Check that we can convert dates older than 1901
+        """
+        self.assertEqual(dbf2date('18990506'), datetime.date(1899, 5, 6))
+        self.assertEqual(date2dbf(datetime.date(1899, 5, 6)), '18990506')
+        self.assertEqual(str2dbf('06.05.1899'), '18990506')
+        self.assertEqual(dbf2str('18990506'), '06.05.1899')
+        
 
 class TestYdbfReader(unittest.TestCase):
 
