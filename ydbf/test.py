@@ -161,6 +161,14 @@ class TestYDbfReader(unittest.TestCase):
         self.assertEqual(list(dbf(start_from=0, limit=1)),
                          [reference_data[0]])
 
+    @testdata('simple.dbf')
+    def test_read_deleted(self, fh):
+        dbf = YDbfReader(fh)
+        reference_data = [[25, 12.34, 'test',  datetime.date(2006,  5,  7),  True],
+                          [113, 1.01,  'del',  datetime.date(2006, 12, 23), False],
+                          [7436, 0.5,  'ex.', datetime.date(2006,  7, 15),  True],
+                              ]
+        self.assertEqual(list(dbf(show_deleted=True)), reference_data)
 
 class TestYdbfWriter(unittest.TestCase):
     def setUp(self):
