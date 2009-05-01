@@ -167,7 +167,13 @@ class YDbfWriter(object):
     """
     Most common DBF writer
         @param fh: filehandler (should be opened for binary reads)
-        
+        @param fields: fields structure in format
+            [(NAME, TYP, SIZE, DEC), ...]
+        @type NAME: string
+        @type TYP: string in ("N", "D", "C", "L")
+        @type SIZE: integer
+        @type DEC: integer
+
         @param use_unicode: use unicode instead of strings, default False
         @type use_unicode: C{boolean}
         
