@@ -66,6 +66,8 @@ class YDbfBasicWriter(object):
                                self.recsize, self.lang)
         self.fh.write(self.hdr)
         for name, typ, size, deci in self.fields:
+            if typ not in ('N', 'D', 'L', 'C'):
+                raise ValueError("Unknown type %r of field %s" % (typ, name))
             name = name.ljust(11).replace(' ', '\x00')   # compability with py23, for py24 it looks like name.ljust(11, '\x00')
             fld = struct.pack(lib.FIELD_DESCRIPTION_FORMAT, name, typ, size, deci)
             self.fh.write(fld)

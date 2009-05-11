@@ -80,6 +80,8 @@ class YDbfBasicReader(object):
             name, typ, size, deci = struct.unpack(lib.FIELD_DESCRIPTION_FORMAT,
                                                   self.fh.read(32))
             name = name.split('\0', 1)[0]       # NULL is a end of string
+            if typ not in ('N', 'D', 'L', 'C'):
+                raise ValueError("Unknown type %r of field %s" % (typ, name))
             fields.append((name, typ, size, deci))
         terminator = self.fh.read(1)
         assert terminator == '\x0d', "Terminator must be 0x0d"

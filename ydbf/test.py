@@ -24,7 +24,7 @@ import datetime
 import unittest
 import tempfile
 import os
-from cStringIO import StringIO
+from StringIO import StringIO
 
 from ydbf import YDbfReader, YDbfWriter
 from ydbf.lib import date2dbf, str2dbf, dbf2date, dbf2str
@@ -170,6 +170,10 @@ class TestYDbfReader(unittest.TestCase):
                               ]
         self.assertEqual(list(dbf(show_deleted=True)), reference_data)
 
+    @testdata('wrongtype.dbf')
+    def test_wrongtype(self, fh):
+        self.assertRaises(ValueError, YDbfReader, fh)
+
 class TestYdbfWriter(unittest.TestCase):
     def setUp(self):
         self.dbf_reference_data = '\x03j\x06\x13\x03\x00\x00\x00\xc1\x00\x19\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00INT_FLD\x00\x00\x00\x00N\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00FLT_FLD\x00\x00\x00\x00N\x00\x00\x00\x00\x05\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00CHR_FLD\x00\x00\x00\x00C\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00DTE_FLD\x00\x00\x00\x00D\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00BLN_FLD\x00\x00\x00\x00L\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\r   2512.34test  20060507T  113 1.01del   20061223F 7436 0.50ex.   20060715T\x1a'
@@ -220,6 +224,19 @@ class TestYdbfWriter(unittest.TestCase):
         self.fh.seek(0)
         data = self.fh.read()
         self.assertEqual(data, self.dbf_reference_data)
+
+    def test_wrongtype(self):
+        fields = (
+            ('INT_FLD', 'N', 4, 0),
+            ('FLT_FLD' , 'N', 5, 2),
+            ('WRNG_FLD', '\xd1', 6, 0),
+            ('DTE_FLD', 'D', 8, 0),
+            ('BLN_FLD', 'L', 1, 0),
+        )
+        fh = StringIO("")
+        writer = YDbfWriter(fh, fields)
+        self.assertRaises(ValueError, writer, [])
+
 
 if __name__ == '__main__':
     unittest.main()
