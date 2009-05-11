@@ -81,11 +81,11 @@ class YDbfBasicReader(object):
                                                   self.fh.read(32))
             name = name.split('\0', 1)[0]       # NULL is a end of string
             if typ not in ('N', 'D', 'L', 'C'):
-                raise ValueError("Unknown type %r of field %s" % (typ, name))
+                raise ValueError("Unknown type %r on field %s" % (typ, name))
             fields.append((name, typ, size, deci))
         terminator = self.fh.read(1)
         assert terminator == '\x0d', "Terminator must be 0x0d"
-                
+        
         fields.insert(0, ('DeletionFlag', 'C', 1, 0))
         self.raw_lang = lang
         self._fields = fields  # with DeletionFlag
@@ -121,7 +121,7 @@ class YDbfBasicReader(object):
         offset = self.lenheader + self.recsize*self.start_from
         if self.fh.tell() != offset:
             self.fh.seek(offset)
-            
+        
         if limit is not None:
             self.stop_at = self.start_from + limit
 

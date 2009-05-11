@@ -67,7 +67,7 @@ class YDbfBasicWriter(object):
         self.fh.write(self.hdr)
         for name, typ, size, deci in self.fields:
             if typ not in ('N', 'D', 'L', 'C'):
-                raise ValueError("Unknown type %r of field %s" % (typ, name))
+                raise ValueError("Unknown type %r on field %s" % (typ, name))
             name = name.ljust(11).replace(' ', '\x00')   # compability with py23, for py24 it looks like name.ljust(11, '\x00')
             fld = struct.pack(lib.FIELD_DESCRIPTION_FORMAT, name, typ, size, deci)
             self.fh.write(fld)
@@ -87,7 +87,7 @@ class YDbfBasicWriter(object):
         for record in records:
             i += 1
             self.fh.write(' ')                        # deletion flag
-                
+            
             for (name, typ, size, deci), value in itertools.izip(self.fields, record):
                 if typ ==   'N':
                     if value is None:
@@ -243,4 +243,4 @@ class YDbfWriter(object):
     def get_now(self): return self.writer.now
     def set_now(self, value): self.writer.now = value
     now = property(get_now, set_now)
-        
+
