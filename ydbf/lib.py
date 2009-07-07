@@ -22,15 +22,6 @@ Common lib for both reader and writer
 
 import datetime
 
-
-# Exceptions
-
-class DbfError(Exception):
-    pass
-
-class DbfTypeError(DbfError, TypeError):
-    pass
-
 # Reference data
 
 ENCODINGS = {

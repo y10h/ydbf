@@ -72,7 +72,7 @@ class YDbfBasicReader(object):
         self.sig = sig
         if sig not in lib.SUPPORTED_SIGNATURES:
             version = lib.SIGNATURES.get(sig, 'UNKNOWN')
-            raise lib.DbfError("DBF version '%s' (signature %s) not supported" % (version, hex(sig)))
+            raise ValueError("DBF version '%s' (signature %s) not supported" % (version, hex(sig)))
         
         numfields = (lenheader - 33) // 32
         fields = []
@@ -132,7 +132,7 @@ class YDbfBasicReader(object):
         types_in_list = [t in ('N', 'D', 'L', 'C') for n, t, s, d in self._fields]
         if False in types_in_list and raise_on_unknown_type:
             idx = types_in_list.index(False)
-            raise lib.DbfTypeError("Unknown dbf-type: %s in field %s" % \
+            raise ValueError("Unknown dbf-type: %s in field %s" % \
                     (self._fields[idx][1], self._fields[idx][0]))
         actions = {
             'D': lambda val: self.dbf2date(val.strip()),
@@ -164,7 +164,7 @@ class YDbfBasicReader(object):
                     if conv
                     ]
             except (IndexError, ValueError, TypeError), err:
-                    raise lib.DbfError("Error occured while reading value '%s' from field '%s' (rec #%d)" % \
+                    raise RuntimeError("Error occured while reading value '%s' from field '%s' (rec #%d)" % \
                             (val, self._fields[idx][0], self.i))
             yield res
 
