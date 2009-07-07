@@ -108,14 +108,11 @@ class YDbfBasicReader(object):
         """
         return self.numrec
     
-    def __call__(self, start_from=None, limit=None, raise_on_unknown_type=False,
-                 show_deleted=False):
+    def __call__(self, start_from=None, limit=None, show_deleted=False):
         """
         Get iterator
         @param start_from: index of record start from (optional)
         @param limit: limits number of iterated records (optional)
-        @param raise_on_unknown_type: raise or not exception for unknown type
-            of field
         @param show_deleted: do not skip deleted records (optional)
         @return: iterator over records
         """
@@ -132,11 +129,6 @@ class YDbfBasicReader(object):
             'Y': True, 'y': True, 'T': True, 't': True,
             'N': False, 'n': False, 'F': False, 'f': False,
             }
-        types_in_list = [t in ('N', 'D', 'L', 'C') for n, t, s, d in self._fields]
-        if False in types_in_list and raise_on_unknown_type:
-            idx = types_in_list.index(False)
-            raise ValueError("Unknown dbf-type: %s in field %s" % \
-                    (self._fields[idx][1], self._fields[idx][0]))
         actions = {
             'D': lambda val: self.dbf2date(val.strip()),
             'L': lambda val: logic.get(val.strip()),
