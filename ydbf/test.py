@@ -3,9 +3,9 @@
 # Inspired by code of Raymond Hettinger
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/362715
 #
-# Copyright (C) 2006-2008 Yury Yurevich and contributors
+# Copyright (C) 2006-2009 Yury Yurevich and contributors
 #
-# http://www.pyobject.ru/projects/ydbf/
+# http://pyobject.ru/projects/ydbf/
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
