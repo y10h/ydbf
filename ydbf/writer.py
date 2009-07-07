@@ -180,7 +180,7 @@ class YDbfWriter(object):
         @type use_unicode: C{boolean}
         
         @param encoding: encoding for DBF file,
-            default 'ascii' (or 0x0 war lang code),
+            default 'ascii' (or 0x0 raw lang code),
         @type encoding: C{str}
         
         @param raw_lang: raw lang code in DBF file
