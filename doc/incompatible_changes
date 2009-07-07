@@ -1,0 +1,14 @@
+While YDbf under heavy refactoring, some changes may be backwards incompatible.
+
+2009-07-07 88072716f08b YDbf-specific exceptions are removed
+------------------------------------------------------------
+
+If you catch YDbf-specfic exceptions, you should replace it by ValueError
+or RuntimeError.
+
+ 1. If YDbf doesn't support current DBF version, it raises ValueError
+    instead of DbfError.
+ 2. On unknown dbf type YDbf raises ValueError instead of DbfTypeError;
+ 3. On some typical errors (IndexError, ValueError, TypeError) while converting
+    dbf-value to python-value, YDbf raises RuntimeError with meaningful
+    error message instead of DbfError.
