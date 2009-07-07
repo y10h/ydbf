@@ -65,7 +65,7 @@ SIGNATURES = {
     0x02: 'FoxBase',
     0x03: 'dBASE III',
     0x04: 'dBASE IV',
-    0x05: 'dBASE IV',
+    0x05: 'dBASE V',
     0x30: 'Visual FoxPro',
     0x31: 'Visual FoxPro with AutoIncrement field',
     0x43: 'dBASE IV with SQL table and memo file',
