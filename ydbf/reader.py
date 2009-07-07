@@ -84,8 +84,11 @@ class YDbfBasicReader(object):
                 raise ValueError("Unknown type %r on field %s" % (typ, name))
             fields.append((name, typ, size, deci))
         terminator = self.fh.read(1)
-        assert terminator == '\x0d', "Terminator must be 0x0d"
-        
+        if terminator != '\x0d':
+            raise ValueError("Terminator should be 0x0d. Terminator is a delimiter, "
+                  "which splits header and data sections in file. By specification "
+                  "it should be 0x0d, but it '%s'. This may be as result of "
+                  "corrupted file, non-DBF data or error in YDbf library." % hex(terminator))
         fields.insert(0, ('DeletionFlag', 'C', 1, 0))
         self.raw_lang = lang
         self._fields = fields  # with DeletionFlag
