@@ -32,12 +32,14 @@ class YDbfBasicReader(object):
     Basic class for reading DBF
     
     Instance is an iterator over DBF records
-    
-    @param fh: filehandler (should be opened for binary reads)
     """
     def __init__(self, fh):
         """
-        Constructor
+        Iterator over DBF records
+        
+        Args:
+            `fh`:
+                filehandler (should be opened for binary reading)
         """
         self.fh = fh             # filehandler
         self.numrec = 0          # number of records
@@ -104,17 +106,21 @@ class YDbfBasicReader(object):
     def __len__(self):
         """
         Get number of records in DBF
-        @return: number of records (integer)
         """
         return self.numrec
     
     def __call__(self, start_from=None, limit=None, show_deleted=False):
         """
-        Get iterator
-        @param start_from: index of record start from (optional)
-        @param limit: limits number of iterated records (optional)
-        @param show_deleted: do not skip deleted records (optional)
-        @return: iterator over records
+        Iterate over DBF records
+        
+        Args:
+            `start_from`:
+                index of record start from (optional)
+            `limit`:
+                limits number of iterated records (optional)
+            `show_deleted`:
+                do not skip deleted records (optional)
+                False by default
         """
         if start_from is not None:
             self.start_from = start_from
@@ -169,18 +175,19 @@ class YDbfStrictReader(YDbfBasicReader):
     """
     def __init__(self, fh):
         """
-        Create strict DBF-reader
+        Create strict DBF-reader (with some logical checks)
         
-        @param fh: filehandler (should be opened for binary reads)
+        Args:
+            `fh`:
+                filehandler (should be opened for binary reading)
         """
         super(YDbfStrictReader, self).__init__(fh)
         self.checkConsistency()
 
     def checkConsistency(self):
         """
-        Some checks of DBF structure
-        
-        @raise AssertionError: if some check failed
+        Some logical checks of DBF structure.
+        If some check failed, AssertionError is raised.
         """
         ## check records
         assert self.recsize >1, "Length of record must be >1"
@@ -219,21 +226,24 @@ class YDbfStrictReader(YDbfBasicReader):
 class UnicodeConverter(object):
     """
     Unicode converter which converts all strings to unicode,
-    using lang code in DBF file, or implicitly specified encoding
+    using lang code in DBF file, or implicitly defined encoding
     """
     def __init__(self, default_encoding='ascii', overwrite_encoding=False, raw_lang=0x00):
         """
         Create unicode converter for DBF reader
         
-        @param default_encoding: default encoding (default ascii) for strings
-            (if lang code in DBF is not found)
-        @type default_encoding: C{str}
+        Args:
+            `default_encoding`:
+                default encoding (default ascii) for strings
+                (if lang code in DBF is not found)
         
-        @param overwrite_encoding: overwrite lang code by default encoding, default False
-        @type overwrite_encoding: C{boolean}
-        
-        @param raw_lang: lang code from DBF file, default 0x00 (i.e. absence of lang code)
-        @type raw_lang: C{int}
+            `overwrite_encoding`:
+                overwrite lang code by default encoding,
+                default is False
+            
+            `raw_lang`:
+                lang code from DBF file, default 0x00
+                (i.e. absence of lang code)
         """
         encoding_info = lib.ENCODINGS.get(raw_lang)
         if overwrite_encoding or not encoding_info:
@@ -255,7 +265,9 @@ class DictConverter(object):
     Convert from list to dict each record.
     Must be the last converter in chain.
     
-    @param fields_struct: structure of DBF file
+    Args:
+        `fields_struct`:
+            structure of DBF file
     """
     def __init__(self, fields_struct):
         """
@@ -267,7 +279,9 @@ class DictConverter(object):
         """
         Convert to dict each record
         
-        @param records_iterator: iterator over DBF records
+        Args:
+            `records_iterator`:
+                iterator over DBF records
         """
         fields = self.fields
         for record in records_iterator:
@@ -279,29 +293,26 @@ class DictConverter(object):
 class YDbfReader(object):
     """
     Most common DBF reader
-        @param fh: filehandler (should be opened for binary reads)
-        
-        @param use_unicode: use unicode instead of strings, default False
-        @type use_unicode: C{boolean}
-        
-        @param default_encoding: default encoding for DBF file,
-            default 'ascii',
-            uses with C{use_unicode} option
-        @type default_encoding: C{str}
-        
-        @param overwrite_encoding: overwrite encoding specified
-            in DBF file (lang code) by default value
-            (see C{default_encoding} option), default False,
-            uses with C{use_unicode} option
-        @type overwrite_encoding: C{boolean}
-        
-        @param as_dict: represent each record as dict instead of list,
-            defult False
-        @type as_dict: C{boolean}
-        
-        @param strict: make some checks of internal DBF structure,
-            default True
-        @type strict: C{boolean}
+    
+    Args:
+        `fh`:
+            filehandler (should be opened for binary reading)
+        `use_unicode`:
+            use unicode instead of strings (optional),
+            by default False
+        `default_encoding`:
+            default encoding for DBF file, 
+            by default 'ascii', useful with `use_unicode` option
+        `overwrite_encoding`:
+            overwrite encoding defined in DBF file (lang code)
+            by default value (see `default_encoding` option),
+            by default False, useful with `use_unicode` option      
+        `as_dict`:
+            represent each record as dict instead of list,
+            by default False       
+        `strict`:
+            make some logical checks of internal DBF structure,
+            by default True
     """
     
     def __init__(self, fh, **kwargs):

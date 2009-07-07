@@ -110,11 +110,13 @@ FIELD_DESCRIPTION_FORMAT = '<11sc4xBB14x'
 # Common functions
 
 def dbf2date(dbf_str):
-    '''
-    Convert date from dbf-string to datetime.date
-    @param dbf_str: string in format YYYYMMDD
-    @return: datetime.date instance
-    '''
+    """
+    Converts date from dbf-date to datetime.date
+    
+    Args:
+        `dbf_str`:
+            string in format YYYYMMDD
+    """
     if dbf_str is None or not dbf_str.isdigit() or len(dbf_str) != 8:
         result = None
     else:
@@ -122,21 +124,25 @@ def dbf2date(dbf_str):
     return result
 
 def date2dbf(dt):
-    '''
-    Convert date from datetime.date to dbf-string
-    @param dt: datetime.date instance
-    @return: string in format YYYYMMDD
-    '''
+    """
+    Converts date from datetime.date to dbf-date (string in format YYYYMMDD)
+    
+    Args:
+        `dt`:
+            datetime.date instance
+    """
     if not isinstance(dt, datetime.date):
         raise TypeError("Espects datetime.date instead of %s" % type(dt))
     return "%04d%02d%02d" % (dt.year, dt.month, dt.day)
     
 def dbf2str(dbf_str):
-    '''
-    Convert date from dbf-string to string (DD.MM.YYYY)
-    @param dbf_str: string in format YYYYMMDD
-    @return: string in format DD.MM.YYYY
-    '''
+    """
+    Converts date from dbf-date to string (DD.MM.YYYY)
+    
+    Args:
+        `dbf_str`:
+            dbf-date (string in format YYYYMMDD)
+    """
     if dbf_str is None or not dbf_str.isdigit() or len(dbf_str) != 8:
         result = None
     else:
@@ -144,11 +150,13 @@ def dbf2str(dbf_str):
     return result
 
 def str2dbf(dt_str):
-    '''
-    Convert from string to dbf-string date
-    @param dt_str: string in format DD.MM.YYYY
-    @return: dbf-string date (string in format YYYYMMDD)
-    '''
+    """
+    Converts from string to dbf-date (string in format YYYYMMDD)
+    
+    Args:
+        `dt_str`:
+            string in format DD.MM.YYYY
+    """
     if not isinstance(dt_str, basestring):
         raise TypeError("Espects string or unicode instead of %s" % type(dt_str))
     str_l = len(dt_str)

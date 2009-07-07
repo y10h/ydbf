@@ -29,19 +29,25 @@ from ydbf import lib
 
 class YDbfBasicWriter(object):
     """
-    Class for writing DBF.
-    
-        @param fh: filehandler, should be opened for binary writing
-        @param fields: fields structure in format
-            [(NAME, TYP, SIZE, DEC), ...]
-        @type NAME: string
-        @type TYP: string in ("N", "D", "C", "L")
-        @type SIZE: integer
-        @type DEC: integer
+    Writes DBF from iterator
     """
     def __init__(self, fh, fields, as_dict=False):
         """
-        Constructor
+        Create DBF writer
+        
+        Args:
+            `fh`:
+                filehandler, should be opened for binary writing
+            `fields`:
+                fields structure in format
+                
+                    [(NAME, TYP, SIZE, DEC), ...]
+                
+                where `NAME` is name of field (should be string),
+                `TYP` is a DBF type (string from ("N", "D", "C", "L")),
+                `SIZE` is a length of field (integer) and `DEC` -- length
+                of decimal part (number of digits after the point). `SIZE`
+                should include `DEC`.
         """
         self.now = datetime.date.today()
         self.numrec = 0
@@ -79,8 +85,11 @@ class YDbfBasicWriter(object):
     def __call__(self, records):
         """
         Run DBF-creator
-        @param records: iterator over records
-            (each record is tuple or sequense of values)
+        
+        Args:
+            `records`:
+                iterator over records (each record
+                is tuple or sequense of values)
         """
         self.writeHeader()
         i = 0
@@ -122,9 +131,11 @@ class DictDeconverter(object):
     """
     Deconvert from dict to list
     
-    Must be the last deconverter in chain
+    Must be the last deconverter in a chain
     
-    @param fields_struct: structure of DBF file
+    Args:
+        `fields_struct`:
+            structure of DBF file
     """
     
     def __init__(self, fields_struct):
@@ -137,7 +148,9 @@ class DictDeconverter(object):
         """
         Deconvert from dict each record
         
-        @param records_iterator: iterator over DBF records
+        Args:
+            `records_iterator`:
+                iterator over DBF records
         """
         for record in records_iterator:
             yield [record[f_name] for f_name, f_type, f_size, f_decimal in self.fields]
@@ -145,14 +158,15 @@ class DictDeconverter(object):
 class UnicodeDeconverter(object):
     """
     Deconverts all unicode-strings to byte-strings,
-    using lang code in DBF file, or implicitly specified encoding
+    using lang code in DBF file, or implicitly defined encoding
     """
     def __init__(self, encoding='ascii'):
         """
         Create unicode deconverter for DBF writer
         
-        @param encoding: encoding (default ascii, 0x0 lang code in DBF) for strings
-        @type encoding: C{str}
+        Args:
+            `encoding`:
+                encoding (default ascii, 0x0 lang code in DBF) for strings
         """
         self.encoding = encoding
 
@@ -168,30 +182,36 @@ class UnicodeDeconverter(object):
 class YDbfWriter(object):
     """
     Most common DBF writer
-        @param fh: filehandler (should be opened for binary reads)
-        @param fields: fields structure in format
-            [(NAME, TYP, SIZE, DEC), ...]
-        @type NAME: string
-        @type TYP: string in ("N", "D", "C", "L")
-        @type SIZE: integer
-        @type DEC: integer
+    
+    Args:
+        `fh`:
+            filehandler (should be opened for binary reading)
+        `fields`:
+            fields structure in format
+            
+                [(NAME, TYP, SIZE, DEC), ...]
 
-        @param use_unicode: use unicode instead of strings, default False
-        @type use_unicode: C{boolean}
+            where `NAME` is name of field (should be string),
+            `TYP` is a DBF type (string from ("N", "D", "C", "L")),
+            `SIZE` is a length of field (integer) and `DEC` -- length
+            of decimal part (number of digits after the point). `SIZE`
+            should include `DEC`.
         
-        @param encoding: encoding for DBF file,
-            default 'ascii' (or 0x0 raw lang code),
-        @type encoding: C{str}
+        `use_unicode`:
+            use unicode instead of strings, default False
         
-        @param raw_lang: raw lang code in DBF file
+        `encoding`:
+            encoding for DBF file,
+            by default 'ascii' (or 0x0 raw lang code),
+        
+        `raw_lang`:
+            raw lang code in DBF file
             by default it taken from encoding, but
             using this option you can override it
-        @type C{int}
         
-        @param as_dict: represent each record as dict instead of list,
-            defult False
-        @type as_dict: C{boolean}
-        
+        `as_dict`:
+            represent each record as dict instead of list,
+            by default False
     """
 
     def __init__(self, fh, fields, **kwargs):
