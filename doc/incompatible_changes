@@ -12,3 +12,9 @@ or RuntimeError.
  3. On some typical errors (IndexError, ValueError, TypeError) while converting
     dbf-value to python-value, YDbf raises RuntimeError with meaningful
     error message instead of DbfError.
+
+2009-07-09 233f642bb472 Field types checks are removed in YDbfReader.__call__
+
+Field types checks are implemented both in readHeader and __call_ in YDbfReader.
+It's ambigous, so remove (silent by default) checks in __call__, also
+remove unused now arg `raise_on_unknow_type`.
