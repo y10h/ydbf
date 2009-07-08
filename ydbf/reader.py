@@ -19,7 +19,7 @@
 """
 DBF reader
 """
-__all__ = ["YDbfBasicReader", "YDbfStrictReader", "YDbfReader"]
+__all__ = ["YDbfStrictReader", "YDbfReader"]
 
 import datetime
 import struct
@@ -27,19 +27,33 @@ import itertools
 
 from ydbf import lib
 
-class YDbfBasicReader(object):
+try:
+    from decimal import Decimal
+    decimal_enabled = True
+except ImportError:
+    Decimal = lambda x: float(x)
+    decimal_enabled = False
+
+class YDbfReader(object):
     """
     Basic class for reading DBF
     
     Instance is an iterator over DBF records
     """
-    def __init__(self, fh):
+    def __init__(self, fh, use_unicode=True, encoding=None):
         """
         Iterator over DBF records
         
         Args:
             `fh`:
                 filehandler (should be opened for binary reading)
+            `use_unicode`:
+                convert all char fields to unicode. Use builtin
+                encoding (formerly lang code from DBF file) or
+                implicitly defined encoding via `encoding` arg.
+            `encoding`:
+                force usage of implicitly defined encoding
+                instead of builtin one. By default None.
         """
         self.fh = fh             # filehandler
         self.numrec = 0          # number of records
@@ -54,10 +68,57 @@ class YDbfBasicReader(object):
         self.i = 0               # current item in iterator
         self.dt = None           # date of file creation
         self.dbf2date = lib.dbf2date # function for conversion from dbf to date
+        
+        self._encoding = encoding
+        self.encoding = None
 
-        self.readHeader()
+        self.converters = {}
+        self.actions = {}
+        self.action_resolvers = ()
 
-    def readHeader(self):
+        self._readHeader()
+        if use_unicode:
+            self._defineEncoding()
+        self._makeActions()
+        self.postInit()
+
+    def postInit(self):
+        # place where children want to add their own post-init actions
+        pass
+
+    def _makeActions(self):
+        logic = {
+            'Y': True, 'y': True, 'T': True, 't': True,
+            'N': False, 'n': False, 'F': False, 'f': False,
+            }
+        self.actions = {
+            'date': lambda val, size, dec: self.dbf2date(val.strip()),
+            'logic': lambda val, size, dec: logic.get(val.strip()),
+            'unicode': lambda val, size, dec: unicode(val, self.encoding).rstrip(),
+            'string': lambda val, size, dec: val.rstrip(),
+            'integer': lambda val, size, dec: (val.strip() or 0) and int(val.strip()),
+            'decimal': lambda val, size, dec: Decimal(('%%.%df'%dec) % float(val.strip() or 0.0)),
+        }
+        self.action_resolvers = (
+            lambda typ, size, dec: (typ == 'C' and self.encoding) and 'unicode',
+            lambda typ, size, dec: (typ == 'C' and not self.encoding) and 'string',
+            lambda typ, size, dec: (typ == 'N' and dec) and 'decimal',
+            lambda typ, size, dec: (typ == 'N' and not dec) and 'integer',
+            lambda typ, size, dec: typ == 'D' and 'date',
+            lambda typ, size, dec: typ == 'L' and 'logic',
+        )
+        for name, typ, size, dec in self._fields:
+            for resolver in self.action_resolvers:
+                action = resolver(typ, size, dec)
+                if action:
+                    self.converters[name] = self.actions[action]
+                    break
+            if not action:
+                raise ValueError("Cannot find dbf-to-python converter "
+                                 "for field %s (type %s)" % (name, typ))
+                    
+
+    def _readHeader(self):
         """
         Read DBF header
         """
@@ -85,16 +146,17 @@ class YDbfBasicReader(object):
             if typ not in ('N', 'D', 'L', 'C'):
                 raise ValueError("Unknown type %r on field %s" % (typ, name))
             fields.append((name, typ, size, deci))
+
         terminator = self.fh.read(1)
         if terminator != '\x0d':
             raise ValueError("Terminator should be 0x0d. Terminator is a delimiter, "
                   "which splits header and data sections in file. By specification "
                   "it should be 0x0d, but it '%s'. This may be as result of "
                   "corrupted file, non-DBF data or error in YDbf library." % hex(terminator))
-        fields.insert(0, ('DeletionFlag', 'C', 1, 0))
+        fields.insert(0, ('_deletion_flag', 'C', 1, 0))
         self.raw_lang = lang
-        self._fields = fields  # with DeletionFlag
-        self.fields = fields[1:] # without DeletionFlag
+        self._fields = fields  # with _deletion_flag
+        self.fields = fields[1:] # without _deletion_flag
         self.recfmt = ''.join(['%ds' % fld[2] for fld in fields])
         self.recsize = struct.calcsize(self.recfmt)
         self.numrec = numrec
@@ -102,7 +164,21 @@ class YDbfBasicReader(object):
         self.numfields = numfields
         self.stop_at = numrec
         self.field_names = [fld[0] for fld in self.fields]
-    
+
+    def _defineEncoding(self):
+        builtin_encoding = lib.ENCODINGS.get(self.raw_lang, (None,))[0]
+        if builtin_encoding is None and self._encoding is None:
+            raise ValueError("Cannot resolve builtin lang code %s "
+                             "to encoding and no option `encoding` "
+                             "passed, but `use_unicode` are, so "
+                             "there is no info how we can decode chars "
+                             "to unicode. Please, set up option `encoding` "
+                             "or set `use_unicode` to False" % hex(self.raw_lang))
+        if self._encoding:
+            self.encoding = self._encoding
+        else:
+            self.encoding = builtin_encoding
+
     def __len__(self):
         """
         Get number of records in DBF
@@ -131,57 +207,28 @@ class YDbfBasicReader(object):
         if limit is not None:
             self.stop_at = self.start_from + limit
 
-        logic = {
-            'Y': True, 'y': True, 'T': True, 't': True,
-            'N': False, 'n': False, 'F': False, 'f': False,
-            }
-        actions = {
-            'D': lambda val: self.dbf2date(val.strip()),
-            'L': lambda val: logic.get(val.strip()),
-            'C': lambda val: val.rstrip(),
-            'N': lambda val: (val.strip() or 0) and int(val),
-            'ND': lambda val: (val.strip() or 0.0) and float(val),
-            'DeletionFlag': None,
-            }
-        converters = [
-                         # first of all, is it DeletionFlag
-            actions.get((name == 'DeletionFlag' and 'DeletionFlag') or
-                         # secondary, D or C or someting else
-                    (typ != 'N' and typ) or
-                         # third, decimal (ND)
-                    (deci and 'ND') or
-                         # the last -- N
-                    'N') # default value -- None
-                   for name, typ, size, deci in self._fields]
-        
+
         for i in xrange(self.start_from, self.stop_at):
             record = struct.unpack(self.recfmt, self.fh.read(self.recsize))
             self.i = i
             if not show_deleted and record[0] != ' ':
                 continue                        # deleted record
             try:
-                res = [conv(val)
-                    for idx, (val, conv) in enumerate(itertools.izip(record, converters))
-                    if conv
-                    ]
-            except (IndexError, ValueError, TypeError), err:
-                    raise RuntimeError("Error occured while reading value '%s' from field '%s' (rec #%d)" % \
-                            (val, self._fields[idx][0], self.i))
+                res = dict((name, self.converters[name](val, size, dec))
+                            for (name, typ, size, dec), val 
+                            in itertools.izip(self._fields, record) if (name != '_deletion_flag' or show_deleted))
+            except (IndexError, ValueError, TypeError, KeyError), err:
+                    raise RuntimeError("Error occured (%s: %s) while reading rec #%d" % \
+                            (err.__class__.__name__, err, i))
             yield res
 
-class YDbfStrictReader(YDbfBasicReader):
+class YDbfStrictReader(YDbfReader):
     """
-    DBF-reader with additional checks
+    DBF-reader with additional logical checks
     """
-    def __init__(self, fh):
-        """
-        Create strict DBF-reader (with some logical checks)
-        
-        Args:
-            `fh`:
-                filehandler (should be opened for binary reading)
-        """
-        super(YDbfStrictReader, self).__init__(fh)
+
+    def postInit(self):
+        super(YDbfStrictReader, self).postInit()
         self.checkConsistency()
 
     def checkConsistency(self):
@@ -222,144 +269,4 @@ class YDbfStrictReader(YDbfBasicReader):
                 return
             dbf_size = long(self.lenheader + 1 + self.numrec*self.recsize)
             assert os_size == dbf_size
-
-class UnicodeConverter(object):
-    """
-    Unicode converter which converts all strings to unicode,
-    using lang code in DBF file, or implicitly defined encoding
-    """
-    def __init__(self, default_encoding='ascii', overwrite_encoding=False, raw_lang=0x00):
-        """
-        Create unicode converter for DBF reader
-        
-        Args:
-            `default_encoding`:
-                default encoding (default ascii) for strings
-                (if lang code in DBF is not found)
-        
-            `overwrite_encoding`:
-                overwrite lang code by default encoding,
-                default is False
-            
-            `raw_lang`:
-                lang code from DBF file, default 0x00
-                (i.e. absence of lang code)
-        """
-        encoding_info = lib.ENCODINGS.get(raw_lang)
-        if overwrite_encoding or not encoding_info:
-            self.encoding = default_encoding
-        else:
-            self.encoding = encoding_info[0]
-
-    def __call__(self, records_iterator):
-        """
-        Convert strings to unicode
-        """
-        provide_unicode = lambda x, enc: (isinstance(x, str) and unicode(x, enc)) or x
-        encoding = self.encoding
-        for record in records_iterator:
-            yield [provide_unicode(x, encoding) for x in record]
-
-class DictConverter(object):
-    """
-    Convert from list to dict each record.
-    Must be the last converter in chain.
-    
-    Args:
-        `fields_struct`:
-            structure of DBF file
-    """
-    def __init__(self, fields_struct):
-        """
-        Create dict converter
-        """
-        self.fields = fields_struct
-
-    def __call__(self, records_iterator):
-        """
-        Convert to dict each record
-        
-        Args:
-            `records_iterator`:
-                iterator over DBF records
-        """
-        fields = self.fields
-        for record in records_iterator:
-            record_dict = {}
-            for (f_name, f_type, f_size, f_decimal), value in itertools.izip(fields, record):
-                record_dict[f_name] = value
-            yield record_dict
-            
-class YDbfReader(object):
-    """
-    Most common DBF reader
-    
-    Args:
-        `fh`:
-            filehandler (should be opened for binary reading)
-        `use_unicode`:
-            use unicode instead of strings (optional),
-            by default False
-        `default_encoding`:
-            default encoding for DBF file, 
-            by default 'ascii', useful with `use_unicode` option
-        `overwrite_encoding`:
-            overwrite encoding defined in DBF file (lang code)
-            by default value (see `default_encoding` option),
-            by default False, useful with `use_unicode` option      
-        `as_dict`:
-            represent each record as dict instead of list,
-            by default False       
-        `strict`:
-            make some logical checks of internal DBF structure,
-            by default True
-    """
-    
-    def __init__(self, fh, **kwargs):
-        """
-        Create DBF reader
-        """
-        use_unicode = kwargs.get('use_unicode', False)
-        default_encoding = kwargs.get('default_encoding', 'ascii')
-        overwrite_encoding = kwargs.get('overwrite_encoding', False)
-        as_dict = kwargs.get('as_dict', False)
-        strict = kwargs.get('strict', True)
-
-        if strict:
-            self.reader = YDbfStrictReader(fh)
-        else:
-            self.reader = YDbfBasicReader(fh)
-
-        null_converter = lambda xiter: (x for x in xiter)
-        
-        if use_unicode:
-            self.unicode_converter = UnicodeConverter(default_encoding, overwrite_encoding, self.reader.raw_lang)
-        else:
-            self.unicode_converter = null_converter
-
-        if as_dict:
-            self.dict_converter = DictConverter(self.reader.fields)
-        else:
-            self.dict_converter = null_converter
-
-    def __call__(self, *args, **kwargs):
-        """
-        Get iterator over DBF records
-        """
-        return self.dict_converter(self.unicode_converter(self.reader(*args, **kwargs)))
-
-    def __len__(self):
-        return len(self.reader)
-
-    def __getattr__(self, attr):
-        if attr in self.__dict__ or attr in ('reader', 'unicode_converter', 'dict_converter',):
-            return self.__dict__[attr]
-        else:
-            return getattr(self.__dict__['reader'], attr)
-    
-    def __setattr__(self, attr, val):
-        if attr in self.__dict__ or attr in ('reader', 'unicode_converter', 'dict_converter',):
-            self.__dict__[attr] = val
-        else:
-            setattr(self.__dict__['reader'], attr, val)
 

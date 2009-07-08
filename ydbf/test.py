@@ -23,6 +23,7 @@ Unit-tests for YDbf
 import datetime
 import unittest
 import tempfile
+import decimal
 import os
 from StringIO import StringIO
 
@@ -108,11 +109,19 @@ class TestYDbfReader(unittest.TestCase):
         Unit-test for reader's constructor
         """
         dbf_data = fh.read()
-        self.assertEquals(YDbfReader(StringIO(dbf_data)).raw_lang, 0)
-        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=True).raw_lang, 0)
-        self.assertEquals(YDbfReader(StringIO(dbf_data), as_dict=True).raw_lang, 0)
-        self.assertEquals(YDbfReader(StringIO(dbf_data), as_dict=True, use_unicode=True).raw_lang, 0)
-        self.assertEquals(YDbfReader(StringIO(dbf_data), as_dict=True, use_unicode=True).unicode_converter.encoding, 'ascii')
+        self.assertEquals(YDbfReader(StringIO(dbf_data)).raw_lang,
+                          0)
+        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=True).raw_lang,
+                          0)
+        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=True).encoding,
+                          'ascii')
+        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=False, ).encoding,
+                          None)
+        # without unicode encoding means nothing
+        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=False, encoding='cp866').encoding, 
+                          None)
+        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=True, encoding='cp866').encoding, 
+                          'cp866')
     
     @testdata('simple.dbf')
     def test_dbf2date(self, fh):
@@ -122,7 +131,7 @@ class TestYDbfReader(unittest.TestCase):
     @testdata('simple.dbf')
     def test_header(self, fh):
         dbf = YDbfReader(fh)
-        self.assertEqual(dbf._fields, [('DeletionFlag', 'C', 1, 0),
+        self.assertEqual(dbf._fields, [('_deletion_flag', 'C', 1, 0),
                                         ('INT_FLD',      'N', 4, 0),
                                         ('FLT_FLD',      'N', 5, 2),
                                         ('CHR_FLD',      'C', 6, 0),
@@ -151,10 +160,18 @@ class TestYDbfReader(unittest.TestCase):
     @testdata('simple.dbf')
     def test_call(self, fh):
         dbf = YDbfReader(fh)
-        reference_data = [[25, 12.34, 'test',  datetime.date(2006,  5,  7),  True],
-                               [113, 1.01,  'del',  datetime.date(2006, 12, 23), False],
+        reference_data = [{'INT_FLD': 25,
+                           'FLT_FLD': decimal.Decimal('12.34'),
+                           'CHR_FLD': u'test',
+                           'DTE_FLD': datetime.date(2006,  5,  7),
+                           'BLN_FLD': True},
+                          {'INT_FLD': 113,
+                           'FLT_FLD': decimal.Decimal('1.01'),
+                           'CHR_FLD': u'del',
+                           'DTE_FLD': datetime.date(2006, 12, 23),
+                           'BLN_FLD': False},
                                # skipped deleted line
-                              ]
+                         ]
         self.assertEqual(list(dbf()), reference_data)
         self.assertEqual(list(dbf(start_from=1)),
                          [reference_data[1]])
@@ -164,10 +181,25 @@ class TestYDbfReader(unittest.TestCase):
     @testdata('simple.dbf')
     def test_read_deleted(self, fh):
         dbf = YDbfReader(fh)
-        reference_data = [[25, 12.34, 'test',  datetime.date(2006,  5,  7),  True],
-                          [113, 1.01,  'del',  datetime.date(2006, 12, 23), False],
-                          [7436, 0.5,  'ex.', datetime.date(2006,  7, 15),  True],
-                              ]
+        reference_data = [{'_deletion_flag': u'',
+                           'INT_FLD': 25,
+                           'FLT_FLD': decimal.Decimal('12.34'),
+                           'CHR_FLD': u'test',
+                           'DTE_FLD': datetime.date(2006,  5,  7),
+                           'BLN_FLD': True},
+                          {'_deletion_flag': u'',
+                           'INT_FLD': 113,
+                           'FLT_FLD': decimal.Decimal('1.01'),
+                           'CHR_FLD': u'del',
+                           'DTE_FLD': datetime.date(2006, 12, 23),
+                           'BLN_FLD': False},
+                          {'_deletion_flag': u'*',
+                           'INT_FLD': 7436,
+                           'FLT_FLD': decimal.Decimal('0.50'),
+                           'CHR_FLD': u'ex.',
+                           'DTE_FLD': datetime.date(2006, 7, 15),
+                           'BLN_FLD': True},
+                         ]
         self.assertEqual(list(dbf(show_deleted=True)), reference_data)
 
     @testdata('wrongtype.dbf')

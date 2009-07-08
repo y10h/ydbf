@@ -185,18 +185,6 @@ def table_output_generator(fields_spec, data_iterator):
         # send single record
         yield format_string % tuple(rec)
 
-def _filter_fields(data_iterator, dbf_fields, fields_to_show):
-    """
-    Show only fields which listed in fields_to_show
-    """
-    for rec in data_iterator:
-        filtered_rec = tuple(
-            value
-            for (name, type_, length, dec), value in zip(dbf_fields, rec)
-            if name in fields_to_show
-        )
-        yield filtered_rec
-
 def _escape_data(data_iterator, symbol_escape_to):
     """
     Escapes field separator in data
@@ -215,13 +203,19 @@ def replace_null(data_iterator, undef):
             return v
     for rec in data_iterator:
         yield tuple(provide_undef(x) for x in rec)
-    
+
+def _flatten_data(data_iterator, fields):
+    """
+    Flatten each rec in data iterator from dict to tuple
+    """
+    for rec in data_iterator:
+        yield tuple(rec[name] for name in fields)
 
 def dbf_data(fh, fields=None):
     """
     Return a fields spec and data generator
     """
-    reader = YDbfStrictReader(fh)
+    reader = YDbfStrictReader(fh, use_unicode=False)
     if fields:
         fields_spec = [f for f in reader.fields if f[0] in fields]
         if len(fields_spec) != len(fields):
@@ -231,10 +225,11 @@ def dbf_data(fh, fields=None):
                 raise ValueError("Wrong fields: %s" % ', '.join(difference))
             else:
                 raise ValueError("Wrong fields")
-        generator = _filter_fields(reader(), reader.fields, fields)
     else:
+        # all fields
         fields_spec = reader.fields
-        generator = reader()
+        fields = [f[0] for f in reader.fields]
+    generator = _flatten_data(reader(), fields)
     return fields_spec, generator
 
 def write_output(output_fh, data_iterator, flush_on_each_record=True):

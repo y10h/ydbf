@@ -20,7 +20,7 @@ def open_dbf(name, encoding='cp866'):
     reader = ydbf.YDbfReader(
         fh=open(name, 'rb'),
         use_unicode=True,
-        as_dict=True)
+        encoding=encoding)
     return reader
 
 def _get_column_name(dbf_name):
