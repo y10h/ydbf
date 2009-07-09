@@ -1,5 +1,6 @@
 While YDbf under heavy refactoring, some changes may be backwards incompatible.
 
+
 2009-07-07 88072716f08b YDbf-specific exceptions are removed
 ------------------------------------------------------------
 
@@ -13,8 +14,68 @@ or RuntimeError.
     dbf-value to python-value, YDbf raises RuntimeError with meaningful
     error message instead of DbfError.
 
-2009-07-09 233f642bb472 Field types checks are removed in YDbfReader.__call__
+
+2009-07-07 233f642bb472 Field types checks are removed in YDbfReader.__call__
+-----------------------------------------------------------------------------
 
 Field types checks are implemented both in readHeader and __call_ in YDbfReader.
 It's ambigous, so remove (silent by default) checks in __call__, also
 remove unused now arg `raise_on_unknow_type`.
+
+
+2009-07-08 32a2d002728d Massive reader refactoring
+--------------------------------------------------
+
+There is a couple of incompatible changes in single changeset:
+
+ 1. YDbfReader is unicode-aware by default. So, now, you aren't required to use
+    `use_unicode=True`, it `True` by default. I.e. instead of
+    
+        reader = ydbf.YDbfReader(fh, use_unicode=True)
+    
+    you may to use
+    
+        reader = ydbf.YDbfReader(fh)
+    
+    But, if you want to return to funky world of 8-bit, you should set option
+    `use_unicode` to False. I.e., instead of
+    
+        reader = ydbf.YDbfReader(fh)
+    
+    you should use
+    
+        reader = ydbf.YDbfReader(fh, use_unicode=False)    
+
+ 2. Encoding/raw-lang magic is removed. DBF format have internal code for
+    representing encoding of data, but some software doesn't set it correctly,
+    so YDbfReader want to give a workaround early. For example, set default
+    encoding, use builtin encoding, or force default encoding. But it is
+    ugly way, to find and avoid all quirks from other software, so now 
+    YDbfReader uses straightforward way to define encoding. You
+    may use builtin, or you may force to use manually selected encoding.
+    No other options. YDbfReader give a chance to choose proper encoding
+    yourself.
+    
+
+ 3. Each rec in DBF data iterator is dict now. If you early use `as_dict=True`,
+    you need to remove this option, because this option is go away. So,
+    instead of
+    
+        reader = ydbf.YDbfReader(fh, as_dict=True)
+    
+    you need to use
+    
+        reader = ydbf.YDbfReader(fh)
+    
+    so please change your code.
+    
+    But if you are using rec as tuple, there is no way to make it with
+    YDbfReader, but you can do it yourself. For example, instead of:
+    
+        reader = ydbf.YDbfReader(fh)
+    
+    make something like this:
+    
+        _reader = ydbf.YDbfReader(fh)
+        field_names = [f[0] for f in _reader.field]
+        reader = (tuple(rec[name] for name in field_names) for rec in _reader())
