@@ -94,7 +94,7 @@ class YDbfReader(object):
         self.actions = {
             'date': lambda val, size, dec: self.dbf2date(val.strip()),
             'logic': lambda val, size, dec: logic.get(val.strip()),
-            'unicode': lambda val, size, dec: unicode(val, self.encoding).rstrip(),
+            'unicode': lambda val, size, dec: val.decode(self.encoding).rstrip(),
             'string': lambda val, size, dec: val.rstrip(),
             'integer': lambda val, size, dec: (val.strip() or 0) and int(val.strip()),
             'decimal': lambda val, size, dec: Decimal(('%%.%df'%dec) % float(val.strip() or 0.0)),
@@ -207,6 +207,8 @@ class YDbfReader(object):
         if limit is not None:
             self.stop_at = self.start_from + limit
 
+        fields = self._fields
+        converters = self.converters
 
         for i in xrange(self.start_from, self.stop_at):
             record = struct.unpack(self.recfmt, self.fh.read(self.recsize))
@@ -214,9 +216,9 @@ class YDbfReader(object):
             if not show_deleted and record[0] != ' ':
                 continue                        # deleted record
             try:
-                res = dict((name, self.converters[name](val, size, dec))
+                res = dict((name, converters[name](val, size, dec))
                             for (name, typ, size, dec), val 
-                            in itertools.izip(self._fields, record) if (name != '_deletion_flag' or show_deleted))
+                            in itertools.izip(fields, record) if (name != '_deletion_flag' or show_deleted))
             except (IndexError, ValueError, TypeError, KeyError), err:
                     raise RuntimeError("Error occured (%s: %s) while reading rec #%d" % \
                             (err.__class__.__name__, err, i))
