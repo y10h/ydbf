@@ -22,8 +22,8 @@ DBF reader
 __all__ = ["YDbfStrictReader", "YDbfReader"]
 
 import datetime
-import struct
-import itertools
+from struct import calcsize, unpack
+from itertools import izip
 
 from ydbf import lib
 
@@ -65,7 +65,6 @@ class YDbfReader(object):
         self.stop_at = 0         # number of rec, iteration stopped at (not include this)
         self.recfmt = ''         # struct-format of rec
         self.recsize = 0         # size of each record (in bytes)
-        self.i = 0               # current item in iterator
         self.dt = None           # date of file creation
         self.dbf2date = lib.dbf2date # function for conversion from dbf to date
         
@@ -124,7 +123,7 @@ class YDbfReader(object):
         """
         self.fh.seek(0)
 
-        sig, year, month, day, numrec, lenheader, recsize, lang = struct.unpack(
+        sig, year, month, day, numrec, lenheader, recsize, lang = unpack(
             lib.HEADER_FORMAT,
             self.fh.read(32))
         year = year + 1900
@@ -140,7 +139,7 @@ class YDbfReader(object):
         numfields = (lenheader - 33) // 32
         fields = []
         for fieldno in xrange(numfields):
-            name, typ, size, deci = struct.unpack(lib.FIELD_DESCRIPTION_FORMAT,
+            name, typ, size, deci = unpack(lib.FIELD_DESCRIPTION_FORMAT,
                                                   self.fh.read(32))
             name = name.split('\0', 1)[0]       # NULL is a end of string
             if typ not in ('N', 'D', 'L', 'C'):
@@ -158,7 +157,7 @@ class YDbfReader(object):
         self._fields = fields  # with _deletion_flag
         self.fields = fields[1:] # without _deletion_flag
         self.recfmt = ''.join(['%ds' % fld[2] for fld in fields])
-        self.recsize = struct.calcsize(self.recfmt)
+        self.recsize = calcsize(self.recfmt)
         self.numrec = numrec
         self.lenheader = lenheader
         self.numfields = numfields
@@ -198,6 +197,7 @@ class YDbfReader(object):
                 do not skip deleted records (optional)
                 False by default
         """
+        
         if start_from is not None:
             self.start_from = start_from
         offset = self.lenheader + self.recsize*self.start_from
@@ -207,22 +207,21 @@ class YDbfReader(object):
         if limit is not None:
             self.stop_at = self.start_from + limit
 
-        fields = self._fields
-        converters = self.converters
-
+        converters = tuple((self.converters[name], name, size, dec)
+                           for name, typ, size, dec in self._fields)
         for i in xrange(self.start_from, self.stop_at):
-            record = struct.unpack(self.recfmt, self.fh.read(self.recsize))
-            self.i = i
+            record = unpack(self.recfmt, self.fh.read(self.recsize))
             if not show_deleted and record[0] != ' ':
-                continue                        # deleted record
+                # deleted record
+                continue
             try:
-                res = dict((name, converters[name](val, size, dec))
-                            for (name, typ, size, dec), val 
-                            in itertools.izip(fields, record) if (name != '_deletion_flag' or show_deleted))
+                yield dict((name, conv(val, size, dec))
+                            for (conv, name, size, dec), val
+                            in izip(converters, record)
+                            if (name != '_deletion_flag' or show_deleted))
             except (IndexError, ValueError, TypeError, KeyError), err:
                     raise RuntimeError("Error occured (%s: %s) while reading rec #%d" % \
                             (err.__class__.__name__, err, i))
-            yield res
 
 class YDbfStrictReader(YDbfReader):
     """
