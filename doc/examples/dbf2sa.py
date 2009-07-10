@@ -144,7 +144,7 @@ def dbf2sa(dbf_name, sa_uri):
     reader = open_dbf(dbf_name)
     meta = make_meta(sa_uri)
     table = make_table(meta, reader)
-    push_data(table, convert_data(reader()))
+    push_data(table, convert_data(reader))
 
 if __name__ == '__main__':
     import sys

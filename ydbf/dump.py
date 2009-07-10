@@ -229,7 +229,7 @@ def dbf_data(fh, fields=None):
         # all fields
         fields_spec = reader.fields
         fields = [f[0] for f in reader.fields]
-    generator = _flatten_data(reader(), fields)
+    generator = _flatten_data(reader.records(), fields)
     return fields_spec, generator
 
 def write_output(output_fh, data_iterator, flush_on_each_record=True):

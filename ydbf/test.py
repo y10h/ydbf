@@ -172,10 +172,10 @@ class TestYDbfReader(unittest.TestCase):
                            'BLN_FLD': False},
                                # skipped deleted line
                          ]
-        self.assertEqual(list(dbf()), reference_data)
-        self.assertEqual(list(dbf(start_from=1)),
+        self.assertEqual(list(dbf), reference_data)
+        self.assertEqual(list(dbf.records(start_from=1)),
                          [reference_data[1]])
-        self.assertEqual(list(dbf(start_from=0, limit=1)),
+        self.assertEqual(list(dbf.records(start_from=0, limit=1)),
                          [reference_data[0]])
 
     @testdata('simple.dbf')
@@ -200,7 +200,7 @@ class TestYDbfReader(unittest.TestCase):
                            'DTE_FLD': datetime.date(2006, 7, 15),
                            'BLN_FLD': True},
                          ]
-        self.assertEqual(list(dbf(show_deleted=True)), reference_data)
+        self.assertEqual(list(dbf.records(show_deleted=True)), reference_data)
 
     @testdata('wrongtype.dbf')
     def test_wrongtype(self, fh):

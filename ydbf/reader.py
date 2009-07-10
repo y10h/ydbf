@@ -76,6 +76,8 @@ class YDbfReader(object):
         self.actions = {}
         self.action_resolvers = ()
 
+        self.iterator = None
+
         self._readHeader()
         if use_unicode:
             self._defineEncoding()
@@ -117,7 +119,6 @@ class YDbfReader(object):
                 raise ValueError("Cannot find dbf-to-python converter "
                                  "for field %s (type %s)" % (name, typ))
                     
-
     def _readHeader(self):
         """
         Read DBF header
@@ -179,13 +180,23 @@ class YDbfReader(object):
         else:
             self.encoding = self.builtin_encoding
 
+    def __iter__(self):
+        if not self.iterator:
+            self.iterator = self.records()
+        return self.iterator
+    
+    def next(self):
+        if not self.iterator:
+            self.iterator = self.records()
+        return self.iterator.next()
+
     def __len__(self):
         """
         Get number of records in DBF
         """
         return self.numrec
     
-    def __call__(self, start_from=None, limit=None, show_deleted=False):
+    def records(self, start_from=None, limit=None, show_deleted=False):
         """
         Iterate over DBF records
         
