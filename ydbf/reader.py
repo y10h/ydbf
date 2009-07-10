@@ -68,8 +68,9 @@ class YDbfReader(object):
         self.dt = None           # date of file creation
         self.dbf2date = lib.dbf2date # function for conversion from dbf to date
         
-        self._encoding = encoding
+        self.implicit_encoding = encoding
         self.encoding = None
+        self.builtin_encoding = None
 
         self.converters = {}
         self.actions = {}
@@ -165,18 +166,18 @@ class YDbfReader(object):
         self.field_names = [fld[0] for fld in self.fields]
 
     def _defineEncoding(self):
-        builtin_encoding = lib.ENCODINGS.get(self.raw_lang, (None,))[0]
-        if builtin_encoding is None and self._encoding is None:
+        self.builtin_encoding = lib.ENCODINGS.get(self.raw_lang, (None,))[0]
+        if self.builtin_encoding is None and self.implicit_encoding is None:
             raise ValueError("Cannot resolve builtin lang code %s "
                              "to encoding and no option `encoding` "
                              "passed, but `use_unicode` are, so "
                              "there is no info how we can decode chars "
                              "to unicode. Please, set up option `encoding` "
                              "or set `use_unicode` to False" % hex(self.raw_lang))
-        if self._encoding:
-            self.encoding = self._encoding
+        if self.implicit_encoding:
+            self.encoding = self.implicit_encoding
         else:
-            self.encoding = builtin_encoding
+            self.encoding = self.builtin_encoding
 
     def __len__(self):
         """
@@ -219,9 +220,20 @@ class YDbfReader(object):
                             for (conv, name, size, dec), val
                             in izip(converters, record)
                             if (name != '_deletion_flag' or show_deleted))
+            except UnicodeDecodeError, err:
+                args = list(err.args[:-1]) + [
+                    "Error occured while reading rec #%d. You are "
+                    "using YDbfReader with unicode-related options: "
+                    "actual encoding %s, builtin DBF encoding %s (raw lang "
+                    "code %s), manually set encoding is %s. Probably, data "
+                    "in DBF file is not encoded with %s encoding, so you "
+                    "should manually define encoding by setting up `encoding` "
+                    "option" % (i, self.encoding, self.builtin_encoding,
+                    hex(self.raw_lang), self.implicit_encoding, self.encoding)]
+                raise UnicodeDecodeError(*args)
             except (IndexError, ValueError, TypeError, KeyError), err:
-                    raise RuntimeError("Error occured (%s: %s) while reading rec #%d" % \
-                            (err.__class__.__name__, err, i))
+                raise RuntimeError("Error occured (%s: %s) while reading rec #%d" % \
+                                   (err.__class__.__name__, err, i))
 
 class YDbfStrictReader(YDbfReader):
     """
