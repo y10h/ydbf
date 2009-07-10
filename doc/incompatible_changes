@@ -84,3 +84,32 @@ There is a couple of incompatible changes in single changeset:
     convenient for DBF type "number with fixed precision", so now YDbfReader
     uses Decimal instead of float. Decimal is pure-python type, so it is slower
     than builtin float, but speed loss is a smaller evil than type mismatching.
+
+2009-07-10 f0af47d38a15 Replace __call__() by records()
+-------------------------------------------------------
+
+Using __call__() in regular code seems to be ugly, while __iter__() looks better,
+so we replace __call__() by records() for custom options (for example, as `show_deleted`),
+but for regular usage __iter__() is recommended. I.e. instead of
+
+    reader = ydbf.YDbfReader(fh)
+    for rec in reader():
+        ...
+
+you must use
+
+    reader = ydbf.YDbfReader(fh)
+    for rec in reader:
+        ...
+
+If you are using some options for __call__, like this:
+
+    reader = ydbf.YDbfReader(fh)
+    for rec in reader(show_deleted=True):
+        ...
+
+you must use
+
+    reader = ydbf.YDbfReader(fh)
+    for rec in reader.records(show_deleted=True):
+        ...
