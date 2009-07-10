@@ -79,3 +79,8 @@ There is a couple of incompatible changes in single changeset:
         _reader = ydbf.YDbfReader(fh)
         field_names = [f[0] for f in _reader.field]
         reader = (tuple(rec[name] for name in field_names) for rec in _reader())
+
+ 4. Decimal instead of float. Decimal type (see `decimal` module) is more
+    convenient for DBF type "number with fixed precision", so now YDbfReader
+    uses Decimal instead of float. Decimal is pure-python type, so it is slower
+    than builtin float, but speed loss is a smaller evil than type mismatching.
