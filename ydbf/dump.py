@@ -158,7 +158,14 @@ def table_output_generator(fields_spec, data_iterator):
     # delimiter is similar to field_separator, but used in table
     delimiter = ' | '
     newline = '\n' # maybe better use os.linesep?
+    # for some types maximal length is fixed, use it
+    fixed_length_types = {
+        'D': 10,
+        'L': 5,
+    }
     for name, type_, length, dec in fields_spec:
+        if type_ in fixed_length_types:
+            length = fixed_length_types[type_]
         if type_ != 'N':
             holder = '%% -%ds' % length
         else:
@@ -169,8 +176,6 @@ def table_output_generator(fields_spec, data_iterator):
         place_holders.append(holder)
         names.append(name)
         # make data for header
-        if type_ == 'D':
-            length = 10
         if len(name) > length:
             name = name[:length-1] + '+'
         format = '%% -%ds' % length
