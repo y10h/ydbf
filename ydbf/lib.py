@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# YDbf - Yielded dbf reader-writer
+# YDbf - Pythonic reader and writer for DBF/XBase files
 # Inspired by code of Raymond Hettinger
-# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/362715
+# http://code.activestate.com/recipes/362715
 #
 # Copyright (C) 2006-2009 Yury Yurevich and contributors
 #
