@@ -159,11 +159,14 @@ def table_output_generator(fields_spec, data_iterator):
     delimiter = ' | '
     newline = '\n' # maybe better use os.linesep?
     for name, type_, length, dec in fields_spec:
-        place_holders.append(
-            (type_ != 'N' and '%% -%ds' % length) or
-            (dec and '%%-%d.%df' % (length, dec)) or
-            '%%-%dd' % length
-        )
+        if type_ != 'N':
+            holder = '%% -%ds' % length
+        else:
+            if dec:
+                holder = '%%-%d.%df' % (length, dec)
+            else:
+                holder = '%%-%dd' % length
+        place_holders.append(holder)
         names.append(name)
         # make data for header
         if type_ == 'D':
