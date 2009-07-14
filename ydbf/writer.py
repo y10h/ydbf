@@ -140,7 +140,10 @@ class YDbfWriter(object):
 
     def flush(self):
         self._writeHeader()
-        self.fh.flush()        
+        self.fh.flush()    
+    
+    def close(self):
+        self.fh.close()    
     
     def write(self, records):
         """
