@@ -40,26 +40,44 @@ class YDbfReader(object):
     
     Instance is an iterator over DBF records
     """
-    def __init__(self, fh, use_unicode=True, encoding=None):
+    def __init__(self, fh, fields=None, use_unicode=True, encoding=None):
         """
         Iterator over DBF records
         
         Args:
             `fh`:
                 filehandler (should be opened for binary reading)
+            
+            `fields`:
+                force to use your own DBF fields structure instead of builtin.
+                Fields structure is defined as [(NAME, TYP, SIZE, DEC),]
+            
             `use_unicode`:
                 convert all char fields to unicode. Use builtin
                 encoding (formerly lang code from DBF file) or
                 implicitly defined encoding via `encoding` arg.
+            
             `encoding`:
                 force usage of implicitly defined encoding
                 instead of builtin one. By default None.
         """
         self.fh = fh             # filehandler
+        self.implicit_encoding = encoding
+        if fields:
+            self._fields = [('_deletion_flag', 'C', 1, 0)] + list(fields)
+            self.fields = list(fields)
+            self.builtin_fields = []
+            self.builtin__fields = []
+        else:
+            self._fields = []
+            self.fields = []
+            self.builtin_fields = []
+            self.builtin__fields = []            
         self.numrec = 0          # number of records
         self.lenheader = 0       # length of header
         self.numfields = 0       # number of fields
-        self.fields = []         # fields info in format [(NAME, TYP, SIZE, DEC),]
+        
+        self.fields = []         
         self.field_names = ()    # field names (i.e. (NAME,))
         self.start_from = 0      # number of rec, iteration started from
         self.stop_at = 0         # number of rec, iteration stopped at (not include this)
@@ -68,7 +86,7 @@ class YDbfReader(object):
         self.dt = None           # date of file creation
         self.dbf2date = lib.dbf2date # function for conversion from dbf to date
         
-        self.implicit_encoding = encoding
+
         self.encoding = None
         self.builtin_encoding = None
 
@@ -155,10 +173,13 @@ class YDbfReader(object):
                   "it should be 0x0d, but it '%s'. This may be as result of "
                   "corrupted file, non-DBF data or error in YDbf library." % hex(terminator))
         fields.insert(0, ('_deletion_flag', 'C', 1, 0))
+        self.builtin__fields = fields  # with _deletion_flag
+        self.builtin_fields = fields[1:] # without _deletion_flag
+        if not self.fields:
+            self.fields = self.builtin_fields
+            self._fields = self.builtin__fields	
         self.raw_lang = lang
-        self._fields = fields  # with _deletion_flag
-        self.fields = fields[1:] # without _deletion_flag
-        self.recfmt = ''.join(['%ds' % fld[2] for fld in fields])
+        self.recfmt = ''.join(['%ds' % fld[2] for fld in self._fields])
         self.recsize = calcsize(self.recfmt)
         self.numrec = numrec
         self.lenheader = lenheader
