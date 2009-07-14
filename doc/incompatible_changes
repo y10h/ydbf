@@ -1,3 +1,6 @@
+YDbf backwards incompatible changes from 0.0.1dev_20090515 till 0.3rc1
+======================================================================
+
 Some changes from version 0.0.1dev_20090515 till 0.3rc1 are backwards incompatible,
 here they are.
 
@@ -90,7 +93,7 @@ There is a couple of incompatible changes in single changeset:
 -------------------------------------------------------
 
 Using __call__() in regular code seems to be ugly, while __iter__() looks better,
-so we replace __call__() by records() for custom options (for example, as `show_deleted`),
+so __call__() is replaced by records() for custom options (for example `show_deleted`),
 but for regular usage __iter__() is recommended. I.e. instead of
 
     reader = ydbf.YDbfReader(fh)
@@ -118,7 +121,7 @@ you must use
 2009-07-14 c4e5ea170d59 Massive writer refactoring
 --------------------------------------------------
 
-Writer was adapted to new ydbf style coming from reader,
+Writer is adapted to new ydbf style coming from reader,
 so this changeset accumulates all changes:
 
  1. On unknown type YDbfWriter raises ValueError on constructor
@@ -145,8 +148,9 @@ so this changeset accumulates all changes:
         writer = ydbf.YDbfWriter(fh, fields, use_unicode=False)
  
 
- 3. More easy way to set encoding (lang code internally). Now you should choose
-    encoding only and YDbfWriter set proper lang code automatically.
+ 3. More easy way to set encoding (lang code DBF internally). Now you
+    should choose encoding only and YDbfWriter set proper lang code
+    automatically.
 
  4. __call__() renamed to write(). You must change your code from
  
