@@ -109,9 +109,9 @@ def get_data(fields_structure, number_of_records):
 def gendbf(filename, number_of_records=2000, fields_number=20):
     fh = open(filename, 'wb')
     fields = get_fields_structure(fields_number)
-    writer = ydbf.YDbfWriter(fh, fields, encoding='cp1251')
-    writer.write(get_data(fields, number_of_records))
-    fh.close()
+    dbf = ydbf.open(filename, 'w', fields, encoding='cp1251')
+    dbf.write(get_data(fields, number_of_records))
+    dbf.close()
 
 def usage():
     print "Usage: gendbf.py <name> [number_of_records] [number_of_fields] "

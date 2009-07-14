@@ -7,22 +7,6 @@ import os
 import ydbf
 import sqlalchemy as sa
 
-
-def open_dbf(name, encoding='cp866'):
-    """
-    Open DBF file and return YDbfReader instance
-    
-    Arguments:
-    
-        ``name``
-            name of DBF file
-    """ 
-    reader = ydbf.YDbfReader(
-        fh=open(name, 'rb'),
-        use_unicode=True,
-        encoding=encoding)
-    return reader
-
 def _get_column_name(dbf_name):
     """
     Return name of column for specified dbf field name
@@ -141,7 +125,7 @@ def dbf2sa(dbf_name, sa_uri):
         ``sa_uri``
             SQLAlchemy DB URI, move data to
     """
-    reader = open_dbf(dbf_name)
+    reader = ydbf.open(dbf_name)
     meta = make_meta(sa_uri)
     table = make_table(meta, reader)
     push_data(table, convert_data(reader))
