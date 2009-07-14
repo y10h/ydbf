@@ -209,11 +209,8 @@ class TestYDbfReader(unittest.TestCase):
 class TestYdbfWriter(unittest.TestCase):
     def setUp(self):
         self.dbf_reference_data = '\x03j\x06\x13\x03\x00\x00\x00\xc1\x00\x19\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00INT_FLD\x00\x00\x00\x00N\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00FLT_FLD\x00\x00\x00\x00N\x00\x00\x00\x00\x05\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00CHR_FLD\x00\x00\x00\x00C\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00DTE_FLD\x00\x00\x00\x00D\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00BLN_FLD\x00\x00\x00\x00L\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\r   2512.34test  20060507T  113 1.01del   20061223F 7436 0.50ex.   20060715T\x1a'
-        self.reference_data = [[25, 12.34, 'test', datetime.date(2006,  5,  7),  True],
-                               [113, 1.01,  'del', datetime.date(2006, 12, 23), False],
-                               [7436, 0.5,  'ex.', datetime.date(2006,  7, 15),  True],
-                              ]
-        self.reference_data_dict = [
+
+        self.reference_data = [
         {'INT_FLD':  25, 'FLT_FLD':12.34, 'CHR_FLD':'test', 'DTE_FLD':datetime.date(2006,  5,  7), 'BLN_FLD':True},
         {'INT_FLD': 113, 'FLT_FLD': 1.01, 'CHR_FLD': 'del', 'DTE_FLD':datetime.date(2006, 12, 23), 'BLN_FLD':False},
         {'INT_FLD':7436, 'FLT_FLD': 0.5,  'CHR_FLD': 'ex.', 'DTE_FLD':datetime.date(2006,  7, 15), 'BLN_FLD':True},
@@ -224,9 +221,7 @@ class TestYdbfWriter(unittest.TestCase):
                        ('DTE_FLD',      'D', 8, 0),
                        ('BLN_FLD',      'L', 1, 0)]
         self.fh = StringIO()
-        self.dbf = YDbfWriter(self.fh, self.fields)
-        self.dbf_dict = YDbfWriter(self.fh, self.fields, as_dict=True)
-        
+        self.dbf = YDbfWriter(self.fh, self.fields)      
     
     def test_header(self):
         self.assertEqual(self.dbf.now, datetime.date.today())
@@ -238,21 +233,12 @@ class TestYdbfWriter(unittest.TestCase):
 
     def test_date2dbf(self):
         self.assertEqual(self.dbf.date2dbf, date2dbf)
-    
-    def test_call(self):
+       
+    def test_write(self):
         self.dbf.now = datetime.date(2006, 6, 19)
         self.assertEqual(self.dbf.now, datetime.date(2006, 6, 19))
-        self.dbf(self.reference_data)
+        self.dbf.write(self.reference_data)
         self.assertEqual(self.dbf.numrec, 3)
-        self.fh.seek(0)
-        data = self.fh.read()
-        self.assertEqual(data, self.dbf_reference_data)
-    
-    def test_call_as_dict(self):
-        self.dbf_dict.now = datetime.date(2006, 6, 19)
-        self.assertEqual(self.dbf_dict.now, datetime.date(2006, 6, 19))
-        self.dbf_dict(self.reference_data_dict)
-        self.assertEqual(self.dbf_dict.numrec, 3)
         self.fh.seek(0)
         data = self.fh.read()
         self.assertEqual(data, self.dbf_reference_data)
@@ -266,8 +252,7 @@ class TestYdbfWriter(unittest.TestCase):
             ('BLN_FLD', 'L', 1, 0),
         )
         fh = StringIO("")
-        writer = YDbfWriter(fh, fields)
-        self.assertRaises(ValueError, writer, [])
+        self.assertRaises(ValueError, YDbfWriter, fh, fields)
 
 
 if __name__ == '__main__':
