@@ -267,6 +267,12 @@ class YDbfReader(object):
                 raise RuntimeError("Error occured (%s: %s) while reading rec #%d" % \
                                    (err.__class__.__name__, err, i))
 
+    def read(self):
+        return self.records()
+    
+    def close(self):
+        return self.fh.close()
+
 class YDbfStrictReader(YDbfReader):
     """
     DBF-reader with additional logical checks
