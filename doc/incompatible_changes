@@ -1,4 +1,5 @@
-While YDbf under heavy refactoring, some changes may be backwards incompatible.
+Some changes from version 0.0.1dev_20090515 till 0.3rc1 are backwards incompatible,
+here they are.
 
 
 2009-07-07 88072716f08b YDbf-specific exceptions are removed
