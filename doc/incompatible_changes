@@ -113,3 +113,70 @@ you must use
     reader = ydbf.YDbfReader(fh)
     for rec in reader.records(show_deleted=True):
         ...
+
+2009-07-14 c4e5ea170d59 Massive writer refactoring
+--------------------------------------------------
+
+Writer was adapted to new ydbf style coming from reader,
+so this changeset accumulates all changes:
+
+ 1. On unknown type YDbfWriter raises ValueError on constructor
+ 
+ 2. YDbfWriter now unicode-aware by default, so now you aren't
+    required to set option `use_unicode` to True. I.e. instead of
+
+        writerr = ydbf.YDbfWriter(fh, fields, use_unicode=True)
+    
+    you may to use
+    
+        reader = ydbf.YDbfWriter(fh, fields)
+    
+    NOTE: you may want to set encoding, if you're using YDbfWriter
+    in unicode mode
+    
+    But, if you want to return to funky world of 8-bit, you should set option
+    `use_unicode` to False. I.e., instead of
+    
+        writer = ydbf.YDbfWriter(fh, fields)
+    
+    you should use
+    
+        writer = ydbf.YDbfWriter(fh, fields, use_unicode=False)
+ 
+
+ 3. More easy way to set encoding (lang code internally). Now you should choose
+    encoding only and YDbfWriter set proper lang code automatically.
+
+ 4. __call__() renamed to write(). You must change your code from
+ 
+        writer(data_iterator)
+    
+    to
+        
+        writer.write(data_iterator)
+
+ 5. Each rec in data iterator you pushed to YDbfWriter now must be dict-like.
+    If you early use `as_dict=True`, you need to remove this option, because
+    this option is go away. So, instead of
+    
+        writer = ydbf.YDbfWriter(fh, fields, as_dict=True)
+    
+    you need to use
+    
+        writer = ydbf.YDbfWriter(fh, fields)
+    
+    so please change your code.
+    
+    But if you are using rec as tuple, there is no way to make it with
+    modern YDbfWriter, but you can do it yourself. For example, instead of:
+    
+        writer = ydbf.YDbfWriter(fh, fields)
+        writer(data_iterator)
+    
+    make something like this:
+    
+        writer = ydbf.YDbfWriter(fh, fields)
+        field_names = [f[0] for f in fields]
+        data = (dict((name, value) for name, value in zip(field_names, rec))
+                for rec in data_iterator)
+        writer.write(data)
