@@ -34,7 +34,9 @@ def _unescape_separator(option, opt_str, value, parser):
     like '\n', '\r', '\t' both in record and field separators
     """
     if value is not None:
-        value = value.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
+        replacements = (('\\n', '\n'), ('\\r', '\r'), ('\\t', '\t'))
+        for what, replace_by in replacements:
+            value = value.replace(what, replace_by)
     setattr(parser.values, option.dest, value)
 
 def _split_fields(option, opt_str, value, parser):
