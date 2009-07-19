@@ -80,7 +80,8 @@ class YDbfReader(object):
         self.fields = []         
         self.field_names = ()    # field names (i.e. (NAME,))
         self.start_from = 0      # number of rec, iteration started from
-        self.stop_at = 0         # number of rec, iteration stopped at (not include this)
+        self.stop_at = 0         # number of rec, iteration stopped at
+                                 # (not include this)
         self.recfmt = ''         # struct-format of rec
         self.recsize = 0         # size of each record (in bytes)
         self.dt = None           # date of file creation
@@ -110,18 +111,24 @@ class YDbfReader(object):
         logic = {
             'Y': True, 'y': True, 'T': True, 't': True,
             'N': False, 'n': False, 'F': False, 'f': False,
-            }
+        }
         self.actions = {
             'date': lambda val, size, dec: self.dbf2date(val.strip()),
             'logic': lambda val, size, dec: logic.get(val.strip()),
-            'unicode': lambda val, size, dec: val.decode(self.encoding).rstrip(),
+            'unicode': lambda val, size, dec: val.decode(
+                                                self.encoding).rstrip(),
             'string': lambda val, size, dec: val.rstrip(),
-            'integer': lambda val, size, dec: (val.strip() or 0) and int(val.strip()),
-            'decimal': lambda val, size, dec: Decimal(('%%.%df'%dec) % float(val.strip() or 0.0)),
+            'integer': lambda val, size, dec: (val.strip() or 0) and \
+                                              int(val.strip()),
+            'decimal': lambda val, size, dec: Decimal(('%%.%df'%dec)
+                                                      % float(val.strip() \
+                                                              or 0.0)),
         }
         self.action_resolvers = (
-            lambda typ, size, dec: (typ == 'C' and self.encoding) and 'unicode',
-            lambda typ, size, dec: (typ == 'C' and not self.encoding) and 'string',
+            lambda typ, size, dec: (typ == 'C' and self.encoding) and \
+                                    'unicode',
+            lambda typ, size, dec: (typ == 'C' and not self.encoding) and \
+                                    'string',
             lambda typ, size, dec: (typ == 'N' and dec) and 'decimal',
             lambda typ, size, dec: (typ == 'N' and not dec) and 'integer',
             lambda typ, size, dec: typ == 'D' and 'date',
@@ -154,7 +161,8 @@ class YDbfReader(object):
         self.sig = sig
         if sig not in lib.SUPPORTED_SIGNATURES:
             version = lib.SIGNATURES.get(sig, 'UNKNOWN')
-            raise ValueError("DBF version '%s' (signature %s) not supported" % (version, hex(sig)))
+            raise ValueError("DBF version '%s' (signature %s) not supported"
+                             % (version, hex(sig)))
         
         numfields = (lenheader - 33) // 32
         fields = []
@@ -168,10 +176,12 @@ class YDbfReader(object):
 
         terminator = self.fh.read(1)
         if terminator != '\x0d':
-            raise ValueError("Terminator should be 0x0d. Terminator is a delimiter, "
-                  "which splits header and data sections in file. By specification "
-                  "it should be 0x0d, but it '%s'. This may be as result of "
-                  "corrupted file, non-DBF data or error in YDbf library." % hex(terminator))
+            raise ValueError("Terminator should be 0x0d. Terminator is a "
+                             "delimiter, which splits header and data "
+                             "sections in file. By specification it should be "
+                             "0x0d, but it '%s'. This may be as result of "
+                             "corrupted file, non-DBF data or error in YDbf "
+                             "library." % hex(terminator))
         fields.insert(0, ('_deletion_flag', 'C', 1, 0))
         self.builtin__fields = fields  # with _deletion_flag
         self.builtin_fields = fields[1:] # without _deletion_flag
@@ -195,7 +205,8 @@ class YDbfReader(object):
                              "passed, but `use_unicode` are, so "
                              "there is no info how we can decode chars "
                              "to unicode. Please, set up option `encoding` "
-                             "or set `use_unicode` to False" % hex(self.raw_lang))
+                             "or set `use_unicode` to False"
+                             % hex(self.raw_lang))
         if self.implicit_encoding:
             self.encoding = self.implicit_encoding
         else:
@@ -264,8 +275,8 @@ class YDbfReader(object):
                     hex(self.raw_lang), self.implicit_encoding, self.encoding)]
                 raise UnicodeDecodeError(*args)
             except (IndexError, ValueError, TypeError, KeyError), err:
-                raise RuntimeError("Error occured (%s: %s) while reading rec #%d" % \
-                                   (err.__class__.__name__, err, i))
+                raise RuntimeError("Error occured (%s: %s) while reading rec "
+                                   "#%d" % (err.__class__.__name__, err, i))
 
     def read(self):
         return self.records()
@@ -288,27 +299,33 @@ class YDbfStrictReader(YDbfReader):
         If some check failed, AssertionError is raised.
         """
         ## check records
-        assert self.recsize >1, "Length of record must be >1"
+        assert self.recsize > 1, "Length of record must be >1"
         if self.sig in (0x03, 0x04):
-            assert self.recsize < 4000, "Length of record must be <4000 B for dBASE III and IV"
+            assert self.recsize < 4000, "Length of record must be <4000 B " \
+                                        "for dBASE III and IV"
         assert self.recsize < 32*1024, "Length of record must be <32KB"
         assert self.numrec >= 0, "Number of records must be non-negative"
 
         ## check fields
         assert self.numfields > 0, "The dbf file must have at least one field"
         if self.sig == 0x03:
-            assert self.numfields < 128, "Number of fields in dBASE III must be <128"
+            assert self.numfields < 128, "Number of fields in dBASE III " \
+                                         "must be <128"
         if self.sig == 0x04:
-            assert self.numfields < 256, "Number of fields in dBASE IV must be <256"
+            assert self.numfields < 256, "Number of fields in dBASE IV " \
+                                         "must be <256"
 
         ## check fields, round 2
         for f_name, f_type, f_size, f_decimal in self.fields:
             if f_type == 'N':
-                assert f_size < 20, "Size of numeral field must be <20 (field '%s', size %d)" % (f_name, f_size)
+                assert f_size < 20, "Size of numeral field must be <20 " \
+                                    "(field '%s', size %d)" % (f_name, f_size)
             if f_type == 'C':
-                assert f_size < 255, "Size of numeral field must be <255 (field '%s', size %d)" % (f_name, f_size)
+                assert f_size < 255, "Size of numeral field must be <255 " \
+                                     "(field '%s', size %d)" % (f_name, f_size)
             if f_type == 'L':
-                assert f_size == 1, "Size of logical field must be 1 (field '%s', size %d)" % (f_name, f_size)
+                assert f_size == 1, "Size of logical field must be 1 (field " \
+                                    "'%s', size %d)" % (f_name, f_size)
 
         ## check size, if available
         file_name = getattr(self.fh, 'name', None)

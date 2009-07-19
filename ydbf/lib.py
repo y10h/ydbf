@@ -50,7 +50,8 @@ ENCODINGS = {
     # 0x69:    ('cp790', 'Mazovia (Polish) MS-DOS'),
 }
 
-REVERSE_ENCODINGS = dict([(value[0], (code, value[1])) for code, value in ENCODINGS.items()])
+REVERSE_ENCODINGS = dict([(value[0], (code, value[1]))
+                          for code, value in ENCODINGS.items()])
 
 SIGNATURES = {
     0x02: 'FoxBase',
@@ -120,7 +121,9 @@ def dbf2date(dbf_str):
     if dbf_str is None or not dbf_str.isdigit() or len(dbf_str) != 8:
         result = None
     else:
-        result = datetime.date(int(dbf_str[:4]), int(dbf_str[4:6]), int(dbf_str[6:8]))
+        result = datetime.date(int(dbf_str[:4]),
+                               int(dbf_str[4:6]),
+                               int(dbf_str[6:8]))
     return result
 
 def date2dbf(dt):
@@ -146,7 +149,9 @@ def dbf2str(dbf_str):
     if dbf_str is None or not dbf_str.isdigit() or len(dbf_str) != 8:
         result = None
     else:
-        result = ".".join( reversed( (dbf_str[:4], dbf_str[4:6], dbf_str[6:8]) ) )
+        result = ".".join( reversed( (dbf_str[:4],
+                                      dbf_str[4:6],
+                                      dbf_str[6:8]) ) )
     return result
 
 def str2dbf(dt_str):
@@ -158,12 +163,14 @@ def str2dbf(dt_str):
             string in format DD.MM.YYYY
     """
     if not isinstance(dt_str, basestring):
-        raise TypeError("Espects string or unicode instead of %s" % type(dt_str))
+        raise TypeError("Espects string or unicode instead of %s"
+                         % type(dt_str))
     str_l = len(dt_str)
     if str_l != 10:
-        raise ValueError('Datestring must be 10 symbols (DD.MM.YYYY) length instead of %d' % str_l)
+        raise ValueError('Datestring must be 10 symbols (DD.MM.YYYY) '
+                         'length instead of %d' % str_l)
     d, m, y = dt_str.split('.')
-    return ''.join((y,m,d))
+    return ''.join((y, m, d))
 
 # References:
 # [dbfspec]: http://www.clicketyclick.dk/databases/xbase/format/index.html

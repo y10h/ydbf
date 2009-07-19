@@ -87,7 +87,8 @@ def parse_options(args):
     """
     Parse options
     """
-    parser = OptionParser(usage="%prog [options] files", version="%%prog %s" % VERSION)
+    parser = OptionParser(usage="%prog [options] files", version="%%prog %s"
+                                                                 % VERSION)
     parser.add_option('-r', '--rs',
                            dest='record_separator',
                            action='callback',
@@ -109,13 +110,15 @@ def parse_options(args):
                            callback=_split_fields,
                            default='',
                            type='string',
-                           help='comma separated list of fields to print [default all]',
+                           help='comma separated list of fields to print ' \
+                                '[default all]',
                            )
     parser.add_option('-u', '--undef',
                            dest='undef',
                            type='string',
                            default='',
-                           help='string to print for NULL values [default emptystring]'
+                           help='string to print for NULL values ' \
+                                '[default emptystring]'
                            ),
     parser.add_option('-t', '--table',
                            dest='table',
@@ -152,8 +155,8 @@ def table_output_generator(fields_spec, data_iterator):
     """
     Make table-look output
     """
-    # either separators do not acts on table output, this options only for keeping
-    # interface similar to csv_output_generator.
+    # either separators do not acts on table output, this options only
+    # for keeping interface similar to csv_output_generator.
     place_holders = []
     header_data = []
     names = []
@@ -200,7 +203,8 @@ def _escape_data(data_iterator, symbol_escape_to):
     Escapes field separator in data
     """
     for rec in data_iterator:
-        yield tuple(str(x).replace(symbol_escape_to, '\\%s' % symbol_escape_to) for x in rec)
+        yield tuple(str(x).replace(symbol_escape_to,
+                                   '\\%s' % symbol_escape_to) for x in rec)
 
 def replace_null(data_iterator, undef):
     """
@@ -265,9 +269,11 @@ def dump(args):
         fields_spec, data_iterator = dbf_data(fh, options.fields)
         data_iterator = replace_null(data_iterator, options.undef)
         if options.table:
-            output_generator = table_output_generator(fields_spec, data_iterator)
+            output_generator = table_output_generator(fields_spec,
+                                                      data_iterator)
         else:
-            data_iterator = _escape_data(data_iterator, options.field_separator)
+            data_iterator = _escape_data(data_iterator,
+                                         options.field_separator)
             output_generator = \
                 csv_output_generator(
                         data_iterator,

@@ -88,16 +88,28 @@ class YDbfWriter(object):
 
     def _makeActions(self):
         self.actions = {
-            'date': lambda val, size, dec: (val and self.date2dbf(val)) or '        ',
+            'date': lambda val, size, dec: (val and self.date2dbf(val)) \
+                                            or '        ',
             'logic': lambda val, size, dec: (val and 'T') or 'F',
-            'unicode': lambda val, size, dec: (val and val[:size].encode(self.encoding).ljust(size)) or ' '*size,
-            'string': lambda val, size, dec: (val and str(val)[:size].ljust(size)) or ' '*size,
-            'integer': lambda val, size, dec: ((val and str(val)) or '0').rjust(size),
-            'decimal': lambda val, size, dec: ( (val and ("%%.%df"%dec) % float(str(val))) or '0.%s'%('0'*dec) ).rjust(size),
+            'unicode': lambda val, size, dec: (val and val[:size].\
+                                                       encode(self.encoding).\
+                                                       ljust(size)) \
+                                               or ' '*size,
+            'string': lambda val, size, dec: (val and str(val)[:size].\
+                                                      ljust(size)) \
+                                              or ' '*size,
+            'integer': lambda val, size, dec: ((val and str(val)) or '0'
+                                              ).rjust(size),
+            'decimal': lambda val, size, dec: ( (val and ("%%.%df"%dec) \
+                                                % float(str(val))) \
+                                                or '0.%s'%('0'*dec) )\
+                                              .rjust(size),
         }
         self.action_resolvers = (
-            lambda typ, size, dec: (typ == 'C' and self.use_unicode) and 'unicode',
-            lambda typ, size, dec: (typ == 'C' and not self.use_unicode) and 'string',
+            lambda typ, size, dec: (typ == 'C' and self.use_unicode) and \
+                                   'unicode',
+            lambda typ, size, dec: (typ == 'C' and not self.use_unicode) and \
+                                   'string',
             lambda typ, size, dec: (typ == 'N' and dec) and 'decimal',
             lambda typ, size, dec: (typ == 'N' and not dec) and 'integer',
             lambda typ, size, dec: typ == 'D' and 'date',
@@ -130,7 +142,8 @@ class YDbfWriter(object):
             if typ not in ('N', 'D', 'L', 'C'):
                 raise ValueError("Unknown type %r on field %s" % (typ, name))
             name = name.ljust(11, '\x00')
-            fld = struct.pack(lib.FIELD_DESCRIPTION_FORMAT, name, typ, size, deci)
+            fld = struct.pack(lib.FIELD_DESCRIPTION_FORMAT,
+                              name, typ, size, deci)
             self.fh.write(fld)
         # terminator
         self.fh.write('\x0d')

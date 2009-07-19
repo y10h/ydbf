@@ -39,13 +39,15 @@ def testdata(filename=None, mode='rb'):
         # use temp file
         _, filepath = tempfile.mkstemp(suffix='.dbf')
     else:
-        filepath = os.path.abspath(os.path.join(os.path.dirname(__file__), 'testdata', filename))
+        filepath = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                'testdata', filename))
         if not os.path.isfile(filepath):
             skip = True
     def testrunner(testmethod):
         def wrapper(self):
             if skip:
-                print "test %s SKIPPED, have no test file %s" % (testmethod.__name__, filename)
+                print "test %s SKIPPED, have no test file %s" \
+                      % (testmethod.__name__, filename)
                 outp = None
             else:
                 fh = open(filepath, mode)
@@ -111,16 +113,21 @@ class TestYDbfReader(unittest.TestCase):
         dbf_data = fh.read()
         self.assertEquals(YDbfReader(StringIO(dbf_data)).raw_lang,
                           0)
-        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=True).raw_lang,
+        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=True
+                                    ).raw_lang,
                           0)
-        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=True).encoding,
+        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=True
+                                    ).encoding,
                           'ascii')
-        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=False, ).encoding,
+        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=False
+                                    ).encoding,
                           None)
         # without unicode encoding means nothing
-        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=False, encoding='cp866').encoding, 
+        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=False,
+                                     encoding='cp866').encoding,
                           None)
-        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=True, encoding='cp866').encoding, 
+        self.assertEquals(YDbfReader(StringIO(dbf_data), use_unicode=True,
+                                     encoding='cp866').encoding,
                           'cp866')
     
     @testdata('simple.dbf')
@@ -211,9 +218,12 @@ class TestYdbfWriter(unittest.TestCase):
         self.dbf_reference_data = '\x03j\x06\x13\x03\x00\x00\x00\xc1\x00\x19\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00INT_FLD\x00\x00\x00\x00N\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00FLT_FLD\x00\x00\x00\x00N\x00\x00\x00\x00\x05\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00CHR_FLD\x00\x00\x00\x00C\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00DTE_FLD\x00\x00\x00\x00D\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00BLN_FLD\x00\x00\x00\x00L\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\r   2512.34test  20060507T  113 1.01del   20061223F 7436 0.50ex.   20060715T\x1a'
 
         self.reference_data = [
-        {'INT_FLD':  25, 'FLT_FLD':12.34, 'CHR_FLD':'test', 'DTE_FLD':datetime.date(2006,  5,  7), 'BLN_FLD':True},
-        {'INT_FLD': 113, 'FLT_FLD': 1.01, 'CHR_FLD': 'del', 'DTE_FLD':datetime.date(2006, 12, 23), 'BLN_FLD':False},
-        {'INT_FLD':7436, 'FLT_FLD': 0.5,  'CHR_FLD': 'ex.', 'DTE_FLD':datetime.date(2006,  7, 15), 'BLN_FLD':True},
+        {'INT_FLD':  25, 'FLT_FLD':12.34, 'CHR_FLD':'test',
+         'DTE_FLD':datetime.date(2006,  5,  7), 'BLN_FLD':True},
+        {'INT_FLD': 113, 'FLT_FLD': 1.01, 'CHR_FLD': 'del',
+         'DTE_FLD':datetime.date(2006, 12, 23), 'BLN_FLD':False},
+        {'INT_FLD':7436, 'FLT_FLD': 0.5,  'CHR_FLD': 'ex.',
+         'DTE_FLD':datetime.date(2006,  7, 15), 'BLN_FLD':True},
         ]
         self.fields = [('INT_FLD',      'N', 4, 0),
                        ('FLT_FLD',      'N', 5, 2),
