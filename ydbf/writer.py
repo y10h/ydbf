@@ -22,7 +22,6 @@ DBF writer
 __all__ = ["YDbfWriter"]
 
 import struct
-from itertools import izip
 import datetime
 
 from ydbf import lib
