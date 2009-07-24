@@ -71,7 +71,6 @@ class YDbfWriter(object):
         self.lang = 0x0 # default -- ascii, 0x00
         
         self.converters = {}
-        self.actions = {}
         self.action_resolvers = ()
 
         self._defineLangCode()        
@@ -87,39 +86,42 @@ class YDbfWriter(object):
         self.lang = lang_code[0]
 
     def _makeActions(self):
-        self.actions = {
-            'date': lambda val, size, dec: (val and self.date2dbf(val)) \
-                                            or '        ',
-            'logic': lambda val, size, dec: (val and 'T') or 'F',
-            'unicode': lambda val, size, dec: (val and val[:size].\
-                                                       encode(self.encoding).\
-                                                       ljust(size)) \
-                                               or ' '*size,
-            'string': lambda val, size, dec: (val and str(val)[:size].\
-                                                      ljust(size)) \
-                                              or ' '*size,
-            'integer': lambda val, size, dec: ((val and str(val)) or '0'
-                                              ).rjust(size),
-            'decimal': lambda val, size, dec: ( (val and ("%%.%df"%dec) \
-                                                % float(str(val))) \
-                                                or '0.%s'%('0'*dec) )\
-                                              .rjust(size),
-        }
+        def py2dbf_date(val, size, dec):
+            return (val and self.date2dbf(val)) or '        '
+        
+        def py2dbf_logic(val, size, dec):
+            return (val and 'T') or 'F'
+        
+        def py2dbf_unicode(val, size, dec):
+            return (val and val[:size].encode(self.encoding).ljust(size)) or \
+                   ' '*size
+        
+        def py2dbf_string(val, size, dec):
+            return (val and str(val)[:size].ljust(size)) or ' '*size
+        
+        def py2dbf_integer(val, size, dec):
+            return ((val and str(val)) or '0').rjust(size)
+        
+        def py2dbf_decimal(val, size, dec):
+            return ( (val and ("%%.%df"%dec) % float(str(val))) or \
+                     '0.%s'%('0'*dec)
+                   ).rjust(size)
+        
         self.action_resolvers = (
             lambda typ, size, dec: (typ == 'C' and self.use_unicode) and \
-                                   'unicode',
+                                   py2dbf_unicode,
             lambda typ, size, dec: (typ == 'C' and not self.use_unicode) and \
-                                   'string',
-            lambda typ, size, dec: (typ == 'N' and dec) and 'decimal',
-            lambda typ, size, dec: (typ == 'N' and not dec) and 'integer',
-            lambda typ, size, dec: typ == 'D' and 'date',
-            lambda typ, size, dec: typ == 'L' and 'logic',
+                                   py2dbf_string,
+            lambda typ, size, dec: (typ == 'N' and dec) and py2dbf_decimal,
+            lambda typ, size, dec: (typ == 'N' and not dec) and py2dbf_integer,
+            lambda typ, size, dec: typ == 'D' and py2dbf_date,
+            lambda typ, size, dec: typ == 'L' and py2dbf_logic,
         )
         for name, typ, size, dec in self.fields:
             for resolver in self.action_resolvers:
                 action = resolver(typ, size, dec)
-                if action:
-                    self.converters[name] = self.actions[action]
+                if callable(action):
+                    self.converters[name] = action
                     break
             if not action:
                 raise ValueError("Cannot find python-to-dbf converter "

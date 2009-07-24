@@ -92,7 +92,6 @@ class YDbfReader(object):
         self.builtin_encoding = None
 
         self.converters = {}
-        self.actions = {}
         self.action_resolvers = ()
 
         self.iterator = None
@@ -108,37 +107,39 @@ class YDbfReader(object):
         pass
 
     def _makeActions(self):
-        logic = {
-            'Y': True, 'y': True, 'T': True, 't': True,
-            'N': False, 'n': False, 'F': False, 'f': False,
-        }
-        self.actions = {
-            'date': lambda val, size, dec: self.dbf2date(val.strip()),
-            'logic': lambda val, size, dec: logic.get(val.strip()),
-            'unicode': lambda val, size, dec: val.decode(
-                                                self.encoding).rstrip(),
-            'string': lambda val, size, dec: val.rstrip(),
-            'integer': lambda val, size, dec: (val.strip() or 0) and \
-                                              int(val.strip()),
-            'decimal': lambda val, size, dec: Decimal(('%%.%df'%dec)
-                                                      % float(val.strip() \
-                                                              or 0.0)),
-        }
+        def dbf2py_date(val, size, dec):
+            return self.dbf2date(val)
+        
+        def dbf2py_logic(val, size, dec):
+            return val.strip() in ("Y", "y", "T", "t")
+        
+        def dbf2py_unicode(val, size, dec):
+            return val.decode(self.encoding).rstrip()
+        
+        def dbf2py_string(val, size, dec):
+            return val.rstrip()
+        
+        def dbf2py_integer(val, size, dec):
+            return (val.strip() or 0) and int(val.strip())
+        
+        def dbf2py_decimal(val, size, dec):
+            return Decimal(('%%.%df'%dec) % float(val.strip() or 0.0))
+
         self.action_resolvers = (
             lambda typ, size, dec: (typ == 'C' and self.encoding) and \
-                                    'unicode',
+                                    dbf2py_unicode,
             lambda typ, size, dec: (typ == 'C' and not self.encoding) and \
-                                    'string',
-            lambda typ, size, dec: (typ == 'N' and dec) and 'decimal',
-            lambda typ, size, dec: (typ == 'N' and not dec) and 'integer',
-            lambda typ, size, dec: typ == 'D' and 'date',
-            lambda typ, size, dec: typ == 'L' and 'logic',
+                                    dbf2py_string,
+            lambda typ, size, dec: (typ == 'N' and dec) and dbf2py_decimal,
+            lambda typ, size, dec: (typ == 'N' and not dec) and dbf2py_integer,
+            lambda typ, size, dec: typ == 'D' and dbf2py_date,
+            lambda typ, size, dec: typ == 'L' and dbf2py_logic,
         )
         for name, typ, size, dec in self._fields:
             for resolver in self.action_resolvers:
                 action = resolver(typ, size, dec)
-                if action:
-                    self.converters[name] = self.actions[action]
+                if callable(action):
+                    self.converters[name] = action
                     break
             if not action:
                 raise ValueError("Cannot find dbf-to-python converter "
