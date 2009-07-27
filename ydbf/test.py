@@ -218,16 +218,15 @@ class TestReaderConverters(unittest.TestCase):
 
     @testdata('simple.dbf')
     def setUp(self, fh):
-        self.convs = {}
         self.dbf = YDbfReader(fh)
         self.sizes = {}
         for name, typ, size, dec in self.dbf.fields:
             self.sizes[name] = size, dec
-
+    
     def _getConv(self, name):
         size, dec = self.sizes[name]
         return lambda x: self.dbf.converters[name](x, size, dec)
- 
+    
     def test_int(self):
         conv = self._getConv('INT_FLD') 
         self.assertEquals(conv('    '), 0)
@@ -273,7 +272,27 @@ class TestReaderConverters(unittest.TestCase):
         # some that is not yYtT is False
         self.assertEquals(conv(' '), False)
         self.assertEquals(conv('x'), False)
-         
+
+class TestReaderNonunicodeConverters(unittest.TestCase):
+    
+    @testdata('simple.dbf')
+    def setUp(self, fh):
+        self.dbf = YDbfReader(fh, use_unicode=False)
+        self.sizes = {}
+        for name, typ, size, dec in self.dbf.fields:
+            self.sizes[name] = size, dec
+
+    def _getConv(self, name):
+        size, dec = self.sizes[name]
+        return lambda x: self.dbf.converters[name](x, size, dec)
+
+    def test_char_8bit(self):
+        conv = self._getConv('CHR_FLD')
+        self.assertEquals(conv('      '), '')
+        self.assertEquals(conv('  x   '), '  x')
+        self.assertEquals(conv('x     '), 'x')
+        self.assertEquals(conv('\xf2\xe5\xf1\xf2'), '\xf2\xe5\xf1\xf2')
+
 
 class TestYdbfWriter(unittest.TestCase):
     def setUp(self):
