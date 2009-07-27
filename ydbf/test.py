@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# encoding: utf-8
 # YDbf - Pythonic reader and writer for DBF/XBase files
 # Inspired by code of Raymond Hettinger
 # http://code.activestate.com/recipes/362715
@@ -212,6 +213,67 @@ class TestYDbfReader(unittest.TestCase):
     @testdata('wrongtype.dbf')
     def test_wrongtype(self, fh):
         self.assertRaises(ValueError, YDbfReader, fh)
+
+class TestReaderConverters(unittest.TestCase):
+
+    @testdata('simple.dbf')
+    def setUp(self, fh):
+        self.convs = {}
+        self.dbf = YDbfReader(fh)
+        self.sizes = {}
+        for name, typ, size, dec in self.dbf.fields:
+            self.sizes[name] = size, dec
+
+    def _getConv(self, name):
+        size, dec = self.sizes[name]
+        return lambda x: self.dbf.converters[name](x, size, dec)
+ 
+    def test_int(self):
+        conv = self._getConv('INT_FLD') 
+        self.assertEquals(conv('    '), 0)
+        self.assertEquals(conv('   0'), 0)
+        self.assertEquals(conv(' 0  '), 0)
+        self.assertEquals(conv(' 100'), 100)
+        self.assertEquals(conv('3452'), 3452)
+        self.assertRaises(ValueError, conv, 'foo')
+
+    def test_decimal(self):
+        conv = self._getConv('FLT_FLD')
+        self.assertEquals(conv('     '), decimal.Decimal('0.00'))
+        self.assertEquals(conv(' 0   '), decimal.Decimal('0.00'))
+        self.assertEquals(conv('    5'), decimal.Decimal('5.00'))
+        self.assertEquals(conv(' 5.2 '), decimal.Decimal('5.20'))
+        self.assertEquals(conv(' 5.30'), decimal.Decimal('5.30'))
+        self.assertEquals(conv('12.34'), decimal.Decimal('12.34'))
+        self.assertRaises(ValueError, conv, 'foo')
+
+    def test_char_unicode(self):
+        conv = self._getConv('CHR_FLD')
+        self.assertEquals(conv('      '), u'')
+        self.assertEquals(conv('  x   '), u'  x')
+        self.assertEquals(conv('x     '), u'x')
+        self.assertRaises(UnicodeDecodeError, conv, '\xf2\xe5\xf1\xf2')
+
+    def test_date(self):
+        conv = self._getConv('DTE_FLD')
+        self.assertEquals(conv('20090727'), datetime.date(2009, 7, 27))
+        self.assertEquals(conv('18990302'), datetime.date(1899, 3, 2))
+        self.assertEquals(conv('        '), None)
+        self.assertEquals(conv('foo'), None) #XXX  may be raise ValueError?
+
+    def test_boolean(self):
+        conv = self._getConv('BLN_FLD')
+        self.assertEquals(conv('t'), True)
+        self.assertEquals(conv('T'), True)
+        self.assertEquals(conv('y'), True)
+        self.assertEquals(conv('f'), False)
+        self.assertEquals(conv('F'), False)
+        self.assertEquals(conv('n'), False)
+        self.assertEquals(conv('N'), False)
+        # some that is not yYtT is False
+        self.assertEquals(conv(' '), False)
+        self.assertEquals(conv('x'), False)
+         
 
 class TestYdbfWriter(unittest.TestCase):
     def setUp(self):
