@@ -285,6 +285,12 @@ class YDbfReader(object):
     def close(self):
         return self.fh.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
 class YDbfStrictReader(YDbfReader):
     """
     DBF-reader with additional logical checks

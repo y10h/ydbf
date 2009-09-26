@@ -36,6 +36,12 @@ You can use file name, or already opened (in binary mode) file:
     for record in dbf:
         ...
 
+If you have Python 2.5+, you may want to use `with` statement:
+
+    with ydbf.open('simple.dbf') as dbf:
+        for record in dbf:
+            ...
+
 Each record is represented as dict, where keys are names of fields.
 
 Writing
