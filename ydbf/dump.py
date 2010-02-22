@@ -4,7 +4,7 @@
 # Inspired by code of Raymond Hettinger
 # http://code.activestate.com/recipes/362715
 #
-# Copyright (C) 2006-2009 Yury Yurevich and contributors
+# Copyright (C) 2006-2010 Yury Yurevich and contributors
 #
 # http://pyobject.ru/projects/ydbf/
 #

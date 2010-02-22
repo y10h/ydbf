@@ -3,7 +3,7 @@
 # Inspired by code of Raymond Hettinger
 # http://code.activestate.com/recipes/362715
 #
-# Copyright (C) 2006-2009 Yury Yurevich and contributors
+# Copyright (C) 2006-2010 Yury Yurevich and contributors
 #
 # http://pyobject.ru/projects/ydbf/
 #
@@ -72,12 +72,12 @@ class YDbfReader(object):
             self._fields = []
             self.fields = []
             self.builtin_fields = []
-            self.builtin__fields = []            
+            self.builtin__fields = []
         self.numrec = 0          # number of records
         self.lenheader = 0       # length of header
         self.numfields = 0       # number of fields
         
-        self.fields = []         
+        self.fields = []
         self.field_names = ()    # field names (i.e. (NAME,))
         self.start_from = 0      # number of rec, iteration started from
         self.stop_at = 0         # number of rec, iteration stopped at

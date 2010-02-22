@@ -4,7 +4,7 @@
 # Inspired by code of Raymond Hettinger
 # http://code.activestate.com/recipes/362715
 #
-# Copyright (C) 2006-2009 Yury Yurevich and contributors
+# Copyright (C) 2006-2010 Yury Yurevich and contributors
 #
 # http://pyobject.ru/projects/ydbf/
 #
@@ -312,7 +312,7 @@ class TestYdbfWriter(unittest.TestCase):
                        ('DTE_FLD',      'D', 8, 0),
                        ('BLN_FLD',      'L', 1, 0)]
         self.fh = StringIO()
-        self.dbf = YDbfWriter(self.fh, self.fields)      
+        self.dbf = YDbfWriter(self.fh, self.fields)
     
     def test_header(self):
         self.assertEqual(self.dbf.now, datetime.date.today())
