@@ -186,6 +186,28 @@ class TestYDbfReader(unittest.TestCase):
         self.assertEqual(list(dbf.records(start_from=0, limit=1)),
                          [reference_data[0]])
 
+    @testdata('ooonumbug.dbf')
+    def test_ooo_num_bug(self, fh):
+        # OpenOffice produces wrong dbfs: it justify numbers on left and fill
+        # it zeros (0x00)
+        dbf = YDbfReader(fh)
+        reference_data = [{'INT_FLD': 25,
+                           'FLT_FLD': decimal.Decimal('12.34'),
+                           'CHR_FLD': u'test',
+                           'DTE_FLD': datetime.date(2006,  5,  7),
+                           'BLN_FLD': True},
+                          {'INT_FLD': 113,
+                           'FLT_FLD': decimal.Decimal('1.01'),
+                           'CHR_FLD': u'del',
+                           'DTE_FLD': datetime.date(2006, 12, 23),
+                           'BLN_FLD': False},
+                         ]
+        self.assertEqual(list(dbf), reference_data)
+        self.assertEqual(list(dbf.records(start_from=1)),
+                         [reference_data[1]])
+        self.assertEqual(list(dbf.records(start_from=0, limit=1)),
+                         [reference_data[0]])
+
     @testdata('simple.dbf')
     def test_read_deleted(self, fh):
         dbf = YDbfReader(fh)
