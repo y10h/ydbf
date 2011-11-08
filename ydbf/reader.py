@@ -260,7 +260,7 @@ class YDbfReader(object):
                 # deleted record
                 continue
             try:
-                yield dict((name, conv(val.rstrip('\x00'), size, dec))
+                yield dict((name, conv(val.split('\x00', 1)[0], size, dec))
                             for (conv, name, size, dec), val
                             in izip(converters, record)
                             if (name != '_deletion_flag' or show_deleted))
