@@ -23,7 +23,11 @@ __all__ = ["YDbfStrictReader", "YDbfReader"]
 
 import datetime
 from struct import calcsize, unpack
-from itertools import izip
+
+try:
+    from itertools import izip as zip
+except ImportError:
+    pass
 
 from ydbf import lib
 
@@ -262,9 +266,9 @@ class YDbfReader(object):
             try:
                 yield dict((name, conv(val.rstrip('\x00'), size, dec))
                             for (conv, name, size, dec), val
-                            in izip(converters, record)
+                            in zip(converters, record)
                             if (name != '_deletion_flag' or show_deleted))
-            except UnicodeDecodeError, err:
+            except UnicodeDecodeError as err:
                 args = list(err.args[:-1]) + [
                     "Error occured while reading rec #%d. You are "
                     "using YDbfReader with unicode-related options: "
@@ -275,7 +279,7 @@ class YDbfReader(object):
                     "option" % (i, self.encoding, self.builtin_encoding,
                     hex(self.raw_lang), self.implicit_encoding, self.encoding)]
                 raise UnicodeDecodeError(*args)
-            except (IndexError, ValueError, TypeError, KeyError), err:
+            except (IndexError, ValueError, TypeError, KeyError) as err:
                 raise RuntimeError("Error occured (%s: %s) while reading rec "
                                    "#%d" % (err.__class__.__name__, err, i))
 
