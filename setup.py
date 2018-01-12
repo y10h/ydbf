@@ -1,8 +1,16 @@
 from setuptools import setup, find_packages
+from os import path
 
 version = '0.4'
 
-setup(name='YDbf',
+README_PATH = path.join(path.dirname(path.abspath(__file__)), 'README.md')
+try:
+    import m2r
+    LONG_DESCRIPTION = m2r.parse_from_file(README_PATH)
+except Exception:
+    LONG_DESCRIPTION = ''
+
+setup(name='ydbf-py3',
       version=version,
       description="Pythonic reader and writer for DBF/XBase files",
       long_description="""\
@@ -12,11 +20,12 @@ represents DBF file as data iterator, where
 each record is a simple dict.
 .""",
       classifiers=[
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: GNU General Public License (GPL)',
           'Operating System :: OS Independent',
           'Programming Language :: Python',
+          'Programming Language :: Python :: 3.5',
           'Topic :: Database',
           'Topic :: Software Development :: Libraries :: Python Modules',
       ],

@@ -1,9 +1,13 @@
-## YDBF
+# YDBF
 
 Read/write DBF (DBase/XBase) files from Python. This is a pure-Python
 implementation with no external dependencies.
 
 ## Quickstart
+
+```
+pip install ydbf-py3
+```
 
 ### Reading
 
