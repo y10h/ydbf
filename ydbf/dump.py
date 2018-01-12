@@ -25,10 +25,11 @@ from optparse import OptionParser
 from ydbf import lib, VERSION
 from ydbf.reader import YDbfStrictReader
 
+
 def _unescape_separator(option, opt_str, value, parser):
     """
     Unescape special symbols (like newline)
-    
+
     When --rs '\n' passed to ydbf.dump, OptionParser saves it as
     '\\n', i.e. escapes it. We want to unescape special symbols
     like '\n', '\r', '\t' both in record and field separators
@@ -39,6 +40,7 @@ def _unescape_separator(option, opt_str, value, parser):
             value = value.replace(what, replace_by)
     setattr(parser.values, option.dest, value)
 
+
 def _split_fields(option, opt_str, value, parser):
     """
     Split value of option -F (fields) to list of strings
@@ -46,6 +48,7 @@ def _split_fields(option, opt_str, value, parser):
     if value:
         value = tuple(f.upper().strip() for f in value.split(','))
     setattr(parser.values, option.dest, value)
+
 
 def show_info(files):
     """
@@ -66,7 +69,7 @@ def show_info(files):
             'last_change': str(reader.dt),
             'fields_number': str(reader.numfields),
         }
-        print """\
+        print("""\
 Filename:       %(filename)s
 Version:        %(signature)s (%(version)s)
 Encoding:       %(lang_code)s (%(encoding)s, %(language)s)
@@ -77,11 +80,12 @@ Last change:    %(last_change)s
 Num of fields:  %(fields_number)s
 ===========================================
 Num   Name                Type Len  Decimal
--------------------------------------------""" % header_info
+-------------------------------------------""", **header_info)
 
         for i, (name, type_, length, dec) in enumerate(reader.fields):
-            print "% 3d.  %s  %s  %s  %d" % \
-                (i+1, name.ljust(20), type_, str(length).rjust(3), dec)
+            print("% 3d.  %s  %s  %s  %d",
+                  i + 1, name.ljust(20), type_, str(length).rjust(3), dec)
+
 
 def parse_options(args):
     """
@@ -90,52 +94,52 @@ def parse_options(args):
     parser = OptionParser(usage="%prog [options] files", version="%%prog %s"
                                                                  % VERSION)
     parser.add_option('-r', '--rs',
-                           dest='record_separator',
-                           action='callback',
-                           callback=_unescape_separator,
-                           default='\n',
-                           type='string',
-                           help='output record separator [default newline]')
+                      dest='record_separator',
+                      action='callback',
+                      callback=_unescape_separator,
+                      default='\n',
+                      type='string',
+                      help='output record separator [default newline]')
     parser.add_option('-f', '--fs',
-                           dest='field_separator',
-                           action='callback',
-                           callback=_unescape_separator,
-                           default=':',
-                           type='string',
-                           help='output field separator [default colon]',
-                           ),
+                      dest='field_separator',
+                      action='callback',
+                      callback=_unescape_separator,
+                      default=':',
+                      type='string',
+                      help='output field separator [default colon]',
+                      ),
     parser.add_option('-F', '--fields',
-                           dest='fields',
-                           action='callback',
-                           callback=_split_fields,
-                           default='',
-                           type='string',
-                           help='comma separated list of fields to print ' \
-                                '[default all]',
-                           )
+                      dest='fields',
+                      action='callback',
+                      callback=_split_fields,
+                      default='',
+                      type='string',
+                      help='comma separated list of fields to print '
+                      '[default all]',
+                      )
     parser.add_option('-u', '--undef',
-                           dest='undef',
-                           type='string',
-                           default='',
-                           help='string to print for NULL values ' \
-                                '[default emptystring]'
-                           ),
+                      dest='undef',
+                      type='string',
+                      default='',
+                      help='string to print for NULL values '
+                      '[default emptystring]'
+                      ),
     parser.add_option('-t', '--table',
-                           dest='table',
-                           action='store_true',
-                           default=False,
-                           help='output in table format [default false]'),
+                      dest='table',
+                      action='store_true',
+                      default=False,
+                      help='output in table format [default false]'),
     parser.add_option('-o', '--output',
-                           dest='output',
-                           type='string',
-                           default='',
-                           help='output file'
-                           )
+                      dest='output',
+                      type='string',
+                      default='',
+                      help='output file'
+                      )
     parser.add_option('-i', '--info',
-                           dest='info',
-                           action='store_true',
-                           default=False,
-                           help='show info about file and exit'),
+                      dest='info',
+                      action='store_true',
+                      default=False,
+                      help='show info about file and exit'),
     options, args = parser.parse_args(args)
     if not args:
         parser.error('Files is required argument')
@@ -144,12 +148,14 @@ def parse_options(args):
         sys.exit(0)
     return options, args
 
+
 def csv_output_generator(data_iterator, record_separator, field_separator):
     """
     Make CSV-like output with specified record and field separators
     """
     for rec in data_iterator:
         yield field_separator.join(str(f) for f in rec) + record_separator
+
 
 def table_output_generator(fields_spec, data_iterator):
     """
@@ -162,7 +168,7 @@ def table_output_generator(fields_spec, data_iterator):
     names = []
     # delimiter is similar to field_separator, but used in table
     delimiter = ' | '
-    newline = '\n' # maybe better use os.linesep?
+    newline = '\n'  # maybe better use os.linesep?
     # for some types maximal length is fixed, use it
     fixed_length_types = {
         'D': 10,
@@ -182,7 +188,7 @@ def table_output_generator(fields_spec, data_iterator):
         names.append(name)
         # make data for header
         if len(name) > length:
-            name = name[:length-1] + '+'
+            name = name[:length - 1] + '+'
         format = '%% -%ds' % length
         header_data.append(format % name)
     # add newline at and of file
@@ -193,10 +199,11 @@ def table_output_generator(fields_spec, data_iterator):
     # send header to output
     yield header
     # send line between header and data
-    yield '-'*(len(header)-2) + newline
+    yield '-' * (len(header) - 2) + newline
     for rec in data_iterator:
         # send single record
         yield format_string % tuple(rec)
+
 
 def _escape_data(data_iterator, symbol_escape_to):
     """
@@ -205,6 +212,7 @@ def _escape_data(data_iterator, symbol_escape_to):
     for rec in data_iterator:
         yield tuple(str(x).replace(symbol_escape_to,
                                    '\\%s' % symbol_escape_to) for x in rec)
+
 
 def replace_null(data_iterator, undef):
     """
@@ -218,12 +226,14 @@ def replace_null(data_iterator, undef):
     for rec in data_iterator:
         yield tuple(provide_undef(x) for x in rec)
 
+
 def _flatten_data(data_iterator, fields):
     """
     Flatten each rec in data iterator from dict to tuple
     """
     for rec in data_iterator:
         yield tuple(rec[name] for name in fields)
+
 
 def dbf_data(fh, fields=None):
     """
@@ -246,6 +256,7 @@ def dbf_data(fh, fields=None):
     generator = _flatten_data(reader.records(), fields)
     return fields_spec, generator
 
+
 def write_output(output_fh, data_iterator, flush_on_each_record=True):
     """
     Write data from data_iterator to output_fh
@@ -254,6 +265,7 @@ def write_output(output_fh, data_iterator, flush_on_each_record=True):
         output_fh.write(rec)
         if flush_on_each_record:
             output_fh.flush()
+
 
 def dump(args):
     """
@@ -276,15 +288,16 @@ def dump(args):
                                          options.field_separator)
             output_generator = \
                 csv_output_generator(
-                        data_iterator,
-                        options.record_separator,
-                        options.field_separator
-                    )
+                    data_iterator,
+                    options.record_separator,
+                    options.field_separator
+                )
         write_output(ofh, output_generator)
+
 
 def main():
     dump(sys.argv[1:])
 
+
 if __name__ == '__main__':
     main()
-
