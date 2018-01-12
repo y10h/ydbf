@@ -28,7 +28,7 @@ import tempfile
 import decimal
 import os
 try:
-    from io import StringIO
+    from io import BytesIO as StringIO
 except ImportError:
     from StringIO import StringIO
 
@@ -209,11 +209,11 @@ class TestYDbfReader(unittest.TestCase):
                            'DTE_FLD': datetime.date(2006, 12, 23),
                            'BLN_FLD': False},
                           ]
-        self.assertEqual(list(dbf), reference_data)
-        self.assertEqual(list(dbf.records(start_from=1)),
-                         [reference_data[1]])
-        self.assertEqual(list(dbf.records(start_from=0, limit=1)),
-                         [reference_data[0]])
+        self.assertListEqual(list(dbf), reference_data)
+        self.assertListEqual(list(dbf.records(start_from=1)),
+                             [reference_data[1]])
+        self.assertListEqual(list(dbf.records(start_from=0, limit=1)),
+                             [reference_data[0]])
 
     @testdata('simple.dbf')
     def test_read_deleted(self, fh):
@@ -373,7 +373,7 @@ class TestYdbfWriter(unittest.TestCase):
             ('DTE_FLD', 'D', 8, 0),
             ('BLN_FLD', 'L', 1, 0),
         )
-        fh = StringIO("")
+        fh = StringIO(b"")
         self.assertRaises(ValueError, YDbfWriter, fh, fields)
 
 

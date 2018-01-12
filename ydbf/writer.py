@@ -24,6 +24,7 @@ __all__ = ["YDbfWriter"]
 
 import struct
 import datetime
+import six
 
 from ydbf import lib
 
@@ -147,10 +148,11 @@ class YDbfWriter(object):
                 raise ValueError("Unknown type %r on field %s" % (typ, name))
             name = name.ljust(11, '\x00')
             fld = struct.pack(lib.FIELD_DESCRIPTION_FORMAT,
-                              name, typ, size, deci)
+                              name.encode('utf-8'),
+                              typ.encode('utf-8'), size, deci)
             self.fh.write(fld)
         # terminator
-        self.fh.write('\x0d')
+        self.fh.write(b'\x0d')
         if pos > 0:
             self.fh.seek(pos)
 
@@ -184,7 +186,7 @@ class YDbfWriter(object):
                     "data to writer. Check yourself, please. Record data: "
                     "%s " % (i, self.encoding, hex(self.lang), rec)
                 else:
-                    msg = "Error occured while writing rec #%d. You are "
+                    msg = "Error occurred while writing rec #%d. You are "
                     "using YDbfWriter with unicode mode turned off, so "
                     "we doesn't know why it occurs, so may be it is an "
                     "issue inside ydbf, or corrupted data, or some flowing "

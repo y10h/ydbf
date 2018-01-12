@@ -19,9 +19,11 @@
 """
 DBF reader
 """
+from __future__ import absolute_import, print_function, unicode_literals
 __all__ = ["YDbfStrictReader", "YDbfReader"]
 
 import datetime
+import six
 from struct import calcsize, unpack
 
 try:
@@ -35,8 +37,12 @@ try:
     from decimal import Decimal
     decimal_enabled = True
 except ImportError:
-    Decimal = lambda x: float(x)
+    class Decimal(float):
+        """Custom Decimal class using float for older Python versions.
+        """
+
     decimal_enabled = False
+
 
 class YDbfReader(object):
     """
@@ -82,15 +88,14 @@ class YDbfReader(object):
         self.numfields = 0       # number of fields
         
         self.fields = []
-        self.field_names = ()    # field names (i.e. (NAME,))
-        self.start_from = 0      # number of rec, iteration started from
-        self.stop_at = 0         # number of rec, iteration stopped at
-                                 # (not include this)
-        self.recfmt = ''         # struct-format of rec
-        self.recsize = 0         # size of each record (in bytes)
-        self.dt = None           # date of file creation
-        self.dbf2date = lib.dbf2date # function for conversion from dbf to date
-        
+        self.field_names = ()   # field names (i.e. (NAME,))
+        self.start_from = 0     # number of rec, iteration started from
+        self.stop_at = 0        # number of rec, iteration stopped at
+                                # (not include this)
+        self.recfmt = ''        # struct-format of rec
+        self.recsize = 0        # size of each record (in bytes)
+        self.dt = None          # date of file creation
+        self.dbf2date = lib.dbf2date  # convert from dbf to date
 
         self.encoding = None
         self.builtin_encoding = None
@@ -103,6 +108,7 @@ class YDbfReader(object):
         self._readHeader()
         if use_unicode:
             self._defineEncoding()
+            
         self._makeActions()
         self.postInit()
 
@@ -110,34 +116,75 @@ class YDbfReader(object):
         # place where children want to add their own post-init actions
         pass
 
+    def _defaultEncoding(self):
+        """Set the default encoding based on Python's defaults.
+
+        For Python 2, this is ASCII. For Python 3, this is UTF-8.
+        """
+        if six.PY2:
+            self.encoding = 'ascii'
+        else:
+            self.encoding = 'utf-8'
+
     def _makeActions(self):
         def dbf2py_date(val, size, dec):
+            val = self._decodeVal(val)
             return self.dbf2date(val)
-        
+
         def dbf2py_logic(val, size, dec):
+            val = self._decodeVal(val)
             return val.strip() in ("Y", "y", "T", "t")
-        
+
         def dbf2py_unicode(val, size, dec):
-            return val.decode(self.encoding).rstrip()
+            val = self._decodeVal(val)
+            return val.rstrip()
         
         def dbf2py_string(val, size, dec):
+            val = self._decodeVal(val)
             return val.rstrip()
         
         def dbf2py_integer(val, size, dec):
+            val = self._decodeVal(val)
             return (val.strip() or 0) and int(val.strip())
         
         def dbf2py_decimal(val, size, dec):
-            return Decimal(('%%.%df'%dec) % float(val.strip() or 0.0))
+            val = self._decodeVal(val)
+            return Decimal(('%%.%df' % dec) % float(val.strip() or 0.0))
+
+        def resolve_string(typ, *args, **kwargs):
+            """Resolve a string type.
+            """
+            typ = self._decodeVal(typ)
+            if typ == 'C':
+                return dbf2py_unicode if self.encoding else dbf2py_string
+
+        def resolve_number(typ, size, dec):
+            """Resolve a numeric type.
+            """
+            typ = self._decodeVal(typ)
+            if typ == 'N':
+                return dbf2py_decimal if dec else dbf2py_integer
+
+        def resolve_date(typ, *args, **kwargs):
+            """Resolve date type.
+            """
+            typ = self._decodeVal(typ)
+            if typ == 'D':
+                return dbf2py_date
+
+        def resolve_logic(typ, *args, **kwargs):
+            """Resolve logic type.
+            """
+            if isinstance(typ, six.binary_type):
+                typ = typ.decode(self.encoding)
+            if typ == 'L':
+                return dbf2py_logic
 
         self.action_resolvers = (
-            lambda typ, size, dec: (typ == 'C' and self.encoding) and \
-                                    dbf2py_unicode,
-            lambda typ, size, dec: (typ == 'C' and not self.encoding) and \
-                                    dbf2py_string,
-            lambda typ, size, dec: (typ == 'N' and dec) and dbf2py_decimal,
-            lambda typ, size, dec: (typ == 'N' and not dec) and dbf2py_integer,
-            lambda typ, size, dec: typ == 'D' and dbf2py_date,
-            lambda typ, size, dec: typ == 'L' and dbf2py_logic,
+            resolve_string,
+            resolve_number,
+            resolve_date,
+            resolve_logic,
         )
         for name, typ, size, dec in self._fields:
             for resolver in self.action_resolvers:
@@ -149,6 +196,13 @@ class YDbfReader(object):
                 raise ValueError("Cannot find dbf-to-python converter "
                                  "for field %s (type %s)" % (name, typ))
                     
+    def _decodeVal(self, value):
+        """Convert binary types into strings internally.
+        """
+        if isinstance(value, six.binary_type):
+            value = value.decode(self.encoding)
+        return value
+
     def _readHeader(self):
         """
         Read DBF header
@@ -171,16 +225,19 @@ class YDbfReader(object):
         
         numfields = (lenheader - 33) // 32
         fields = []
-        for fieldno in xrange(numfields):
+        for fieldno in range(numfields):
             name, typ, size, deci = unpack(lib.FIELD_DESCRIPTION_FORMAT,
-                                                  self.fh.read(32))
+                                           self.fh.read(32))
+            name = name.decode('ascii')
+            typ = typ.decode('ascii')
+
             name = name.split('\0', 1)[0]       # NULL is a end of string
             if typ not in ('N', 'D', 'L', 'C'):
                 raise ValueError("Unknown type %r on field %s" % (typ, name))
             fields.append((name, typ, size, deci))
 
         terminator = self.fh.read(1)
-        if terminator != '\x0d':
+        if terminator != b'\x0d':
             raise ValueError("Terminator should be 0x0d. Terminator is a "
                              "delimiter, which splits header and data "
                              "sections in file. By specification it should be "
@@ -258,16 +315,18 @@ class YDbfReader(object):
 
         converters = tuple((self.converters[name], name, size, dec)
                            for name, typ, size, dec in self._fields)
-        for i in xrange(self.start_from, self.stop_at):
+
+        for i in range(self.start_from, self.stop_at):
             record = unpack(self.recfmt, self.fh.read(self.recsize))
             if not show_deleted and record[0] != ' ':
                 # deleted record
                 continue
             try:
-                yield dict((name, conv(val.rstrip('\x00'), size, dec))
-                            for (conv, name, size, dec), val
-                            in zip(converters, record)
-                            if (name != '_deletion_flag' or show_deleted))
+                yield {
+                    name: conv(val.rstrip(b'\x00'), size, dec)
+                    for (conv, name, size, dec), val in zip(converters, record)
+                    if name != '_deletion_flag' or show_deleted
+                }
             except UnicodeDecodeError as err:
                 args = list(err.args[:-1]) + [
                     "Error occured while reading rec #%d. You are "
@@ -294,6 +353,7 @@ class YDbfReader(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
+
 
 class YDbfStrictReader(YDbfReader):
     """

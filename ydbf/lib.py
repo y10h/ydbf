@@ -19,39 +19,42 @@
 """
 Common lib for both reader and writer
 """
+from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
+import six
 
 # Reference data
 
 ENCODINGS = {
     # got from dbf description [dbfspec]
     # id      name      description
-    0x00:    ('ascii', 'ASCII'), # internal use
-    0x01:    ('cp437', 'DOS USA'),
-    0x02:    ('cp850', 'DOS Multilingual'),
-    0x03:    ('cp1252', 'Windows ANSI'),
-    0x04:    ('mac_roman', 'Standard Macintosh'), # NOT SHURE
-    0x64:    ('cp852', 'EE MS-DOS'),
-    0x65:    ('cp866', 'Russian MS-DOS'),
-    0x66:    ('cp865', 'Nordic MS-DOS'),
-    0x67:    ('cp861', 'Icelandic MS-DOS'),
-    0x6A:    ('cp737', 'Greek MS-DOS (437G)'),
-    0x6B:    ('cp857', 'Turkish MS-DOS'),
-    0x96:    ('mac_cyrillic', 'Russian Macintosh'),
-    0x97:    ('mac_latin2', 'Eastern Europe Macintosh'), # NOT SHURE
-    0x98:    ('mac_greek', 'Greek Macinstosh'),
-    0xC8:    ('cp1250', 'Windows EE'),
-    0xC9:    ('cp1251', 'Russian Windows'),
-    0xCA:    ('cp1254', 'Turkish Windows'),
-    0xCB:    ('cp1253', 'Greek Windows'),
-    ## these encodings doesn't supported by python
+    0x00: ('ascii', 'ASCII'),  # internal use
+    0x01: ('cp437', 'DOS USA'),
+    0x02: ('cp850', 'DOS Multilingual'),
+    0x03: ('cp1252', 'Windows ANSI'),
+    0x04: ('mac_roman', 'Standard Macintosh'),  # NOT SHURE
+    0x64: ('cp852', 'EE MS-DOS'),
+    0x65: ('cp866', 'Russian MS-DOS'),
+    0x66: ('cp865', 'Nordic MS-DOS'),
+    0x67: ('cp861', 'Icelandic MS-DOS'),
+    0x6A: ('cp737', 'Greek MS-DOS (437G)'),
+    0x6B: ('cp857', 'Turkish MS-DOS'),
+    0x96: ('mac_cyrillic', 'Russian Macintosh'),
+    0x97: ('mac_latin2', 'Eastern Europe Macintosh'),  # NOT SHURE
+    0x98: ('mac_greek', 'Greek Macinstosh'),
+    0xC8: ('cp1250', 'Windows EE'),
+    0xC9: ('cp1251', 'Russian Windows'),
+    0xCA: ('cp1254', 'Turkish Windows'),
+    0xCB: ('cp1253', 'Greek Windows'),
+    # these encodings doesn't supported by python
     # 0x68:    ('cp895', 'Kamenicky (Czech) MS-DOS'),
     # 0x69:    ('cp790', 'Mazovia (Polish) MS-DOS'),
 }
 
-REVERSE_ENCODINGS = dict([(value[0], (code, value[1]))
-                          for code, value in ENCODINGS.items()])
+REVERSE_ENCODINGS = {
+    value[0]: (code, value[1]) for code, value in ENCODINGS.items()
+}
 
 SIGNATURES = {
     0x02: 'FoxBase',
@@ -88,7 +91,7 @@ SUPPORTED_SIGNATURES = (0x03, 0x04, 0x05)
 #              B -- MDX flag)
 # B   -- language driver
 # 2x  -- pad (2B -- reserved)
-HEADER_FORMAT = '<B3BLHH17xB2x'
+HEADER_FORMAT = b'<B3BLHH17xB2x'
 
 # <   -- little endian
 # 11s -- field name in ASCII (terminated by 0x00)
@@ -106,14 +109,15 @@ HEADER_FORMAT = '<B3BLHH17xB2x'
 #              B -- index field flag)
 # B   -- language driver
 # 2x  -- pad (2B -- reserved)
-FIELD_DESCRIPTION_FORMAT = '<11sc4xBB14x'
+FIELD_DESCRIPTION_FORMAT = b'<11sc4xBB14x'
 
 # Common functions
+
 
 def dbf2date(dbf_str):
     """
     Converts date from dbf-date to datetime.date
-    
+
     Args:
         `dbf_str`:
             string in format YYYYMMDD
@@ -126,10 +130,11 @@ def dbf2date(dbf_str):
                                int(dbf_str[6:8]))
     return result
 
+
 def date2dbf(dt):
     """
     Converts date from datetime.date to dbf-date (string in format YYYYMMDD)
-    
+
     Args:
         `dt`:
             datetime.date instance
@@ -137,11 +142,12 @@ def date2dbf(dt):
     if not isinstance(dt, datetime.date):
         raise TypeError("Espects datetime.date instead of %s" % type(dt))
     return "%04d%02d%02d" % (dt.year, dt.month, dt.day)
-    
+
+
 def dbf2str(dbf_str):
     """
     Converts date from dbf-date to string (DD.MM.YYYY)
-    
+
     Args:
         `dbf_str`:
             dbf-date (string in format YYYYMMDD)
@@ -149,22 +155,23 @@ def dbf2str(dbf_str):
     if dbf_str is None or not dbf_str.isdigit() or len(dbf_str) != 8:
         result = None
     else:
-        result = ".".join( reversed( (dbf_str[:4],
-                                      dbf_str[4:6],
-                                      dbf_str[6:8]) ) )
+        result = ".".join(reversed((dbf_str[:4],
+                                    dbf_str[4:6],
+                                    dbf_str[6:8])))
     return result
+
 
 def str2dbf(dt_str):
     """
     Converts from string to dbf-date (string in format YYYYMMDD)
-    
+
     Args:
         `dt_str`:
             string in format DD.MM.YYYY
     """
-    if not isinstance(dt_str, basestring):
-        raise TypeError("Espects string or unicode instead of %s"
-                         % type(dt_str))
+    if not isinstance(dt_str, six.string_types):
+        raise TypeError("Expects string or unicode instead of %s"
+                        % type(dt_str))
     str_l = len(dt_str)
     if str_l != 10:
         raise ValueError('Datestring must be 10 symbols (DD.MM.YYYY) '
@@ -174,4 +181,3 @@ def str2dbf(dt_str):
 
 # References:
 # [dbfspec]: http://www.clicketyclick.dk/databases/xbase/format/index.html
-
