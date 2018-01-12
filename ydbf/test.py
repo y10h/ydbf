@@ -285,7 +285,7 @@ class TestReaderConverters(unittest.TestCase):
         self.assertEquals(conv('      '), '')
         self.assertEquals(conv('  x   '), '  x')
         self.assertEquals(conv('x     '), 'x')
-        self.assertRaises(UnicodeDecodeError, conv, '\xf2\xe5\xf1\xf2')
+        self.assertRaises(UnicodeDecodeError, conv, b'\xf2\xe5\xf1\xf2')
 
     def test_date(self):
         conv = self._getConv('DTE_FLD')
