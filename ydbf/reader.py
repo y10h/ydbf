@@ -318,7 +318,7 @@ class YDbfReader(object):
 
         for i in range(self.start_from, self.stop_at):
             record = unpack(self.recfmt, self.fh.read(self.recsize))
-            if not show_deleted and record[0] != ' ':
+            if not show_deleted and record[0] != b' ':
                 # deleted record
                 continue
             try:
