@@ -97,7 +97,7 @@ class YDbfWriter(object):
             return (val and 'T') or 'F'
 
         def py2dbf_unicode(val, size, dec):
-            return (val and val[:size].encode(self.encoding).ljust(size)) or \
+            return (val and val[:size].ljust(size)) or \
                 ' ' * size
 
         def py2dbf_string(val, size, dec):
@@ -148,8 +148,8 @@ class YDbfWriter(object):
                 raise ValueError("Unknown type %r on field %s" % (typ, name))
             name = name.ljust(11, '\x00')
             fld = struct.pack(lib.FIELD_DESCRIPTION_FORMAT,
-                              name.encode('utf-8'),
-                              typ.encode('utf-8'), size, deci)
+                              name.encode(self.encoding),
+                              typ.encode(self.encoding), size, deci)
             self.fh.write(fld)
         # terminator
         self.fh.write(b'\x0d')
@@ -178,6 +178,8 @@ class YDbfWriter(object):
                 raw_rec = ''.join(self.converters[name](rec[name], size, dec)
                                   for name, typ, size, dec in self.fields)
             except UnicodeDecodeError as err:
+                import ipdb
+                ipdb.set_trace()
                 self.flush()
                 if self.use_unicode:
                     msg = "Error occured while writing rec #%d. You are "
@@ -196,7 +198,7 @@ class YDbfWriter(object):
             except UnicodeEncodeError as err:
                 self.flush()
                 if self.use_unicode:
-                    msg = "Error occured while writing rec #%d. You are "
+                    msg = "Error occurred while writing rec #%d. You are "
                     "using YDbfWriter with unicode mode turned on and encoding "
                     "%s (lang code %s). Probably, data you are pushing to "
                     "writer doesn't fit to %s encoding, please choose "
@@ -205,7 +207,7 @@ class YDbfWriter(object):
                     "data: %s" % (i, self.encoding, hex(self.lang),
                                   self.encoding, rec)
                 else:
-                    msg = "Error occured while writing rec #%d. You are "
+                    msg = "Error occurred while writing rec #%d. You are "
                     "using YDbfWriter with unicode mode turned off, but "
                     "probably push unicode data to writer. Check yourself, "
                     "please. Record data: %s " % (i, rec)
@@ -217,14 +219,14 @@ class YDbfWriter(object):
                                    "rec #%d. Record data: %s" %
                                    (err.__class__.__name__, err, i, rec))
             # first empty symbol is a deletion flag
-            self.fh.write(' ' + raw_rec)
+            self.fh.write(' {}'.format(raw_rec).encode(self.encoding))
             self.numrec = i
             if divmod(i, 1000)[1] == 0:
                 # each 1k records flush header
                 self.flush()
         self._writeHeader()
         # End of file
-        self.fh.write('\x1A')
+        self.fh.write(b'\x1A')
         self.fh.flush()
 
     def __enter__(self):
