@@ -1,0 +1,27 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3
+    
+  steps:
+    - checkout
+    
+    - run:
+      name: Installing deps
+      command: |
+        pyvenv venv
+        . venv/bin/activate
+        pip install -r requirements.txt
+    - save_cache:
+      key: v1-ydbf-pip-deps-{{ .Branch }}-{{ checksum "requirements.txt" }}
+      paths:
+        - ~/.cache/pip
+        - venv
+
+    - run:
+      name: Run tests
+      command: |
+        . venv/bin/activate
+        python setup.py test
