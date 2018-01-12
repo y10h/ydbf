@@ -42,10 +42,10 @@ with open('simple.dbf', 'wb') as fh:
 
 `fields` is a structure description of DBF file, it is required option for
 writing mode. Structure defined as sequence of field descriptions,
-where each fields described by tuple (NAME, TYP, SIZE, DEC). Where NAME
-is a name of field, TYP -- DBF type of field ('N' for number, 'C' for char,
-'D' for date, 'L' for logical), DEC is a precision (useful for 'N' type only).
-For example, like this:
+where each fields described by tuple `(NAME, TYP, SIZE, DEC)`. Where `NAME`
+is a name of field, `TYP` -- `DBF` type of field (`'N'` for number, `'C'` for
+char, `'D'` for date, `'L'` for logical), DEC is a precision (useful for `'N'`
+type only). For example, like this:
 
 ```python
 fields = [
@@ -56,7 +56,7 @@ fields = [
 ]
 ```
 
-YDbf uses unicode for 'C' fields by default, so you may want to define
+YDbf uses unicode for `'C'` fields by default, so you may want to define
 encoding which be used for DBF file. Sadly, UTF-8 is not available, only
 old scrappy 8-bits.
 
@@ -70,11 +70,11 @@ keys are name of fields. For early defined example it may looks like
 
 ```python
 data = [
-    {'ID': 1, 'VALUE': u'ydbf', 'VISIBLE': True,
+    {'ID': 1, 'VALUE': 'ydbf', 'VISIBLE': True,
         'UPDATE': datetime.date(2009, 7, 14)},
-    {'ID': 2, 'VALUE': u'ydbf-dev', 'VISIBLE': False,
+    {'ID': 2, 'VALUE': 'ydbf-dev', 'VISIBLE': False,
         'UPDATE': datetime.date(2009, 5, 15)},
-    {'ID': 3, 'VALUE': u'pytils', 'VISIBLE': True,
+    {'ID': 3, 'VALUE': 'pytils', 'VISIBLE': True,
         'UPDATE': datetime.date(2009, 5, 11)},
 ]
 ```
