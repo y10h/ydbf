@@ -19,8 +19,26 @@ YDbf dumper script
 """
 import sys
 from optparse import OptionParser
-from ydbf import lib, VERSION
+from ydbf import lib
+from ydbf import six
+from ydbf import VERSION
 from ydbf.reader import YDbfStrictReader
+
+
+_INFO_TEMPLATE = """\
+Filename:       %(filename)s
+Version:        %(signature)s (%(version)s)
+Encoding:       %(lang_code)s (%(encoding)s, %(language)s)
+Num of records: %(records_number)s
+Header length:  %(header_length)s
+Record length:  %(record_length)s
+Last change:    %(last_change)s
+Num of fields:  %(fields_number)s
+===========================================
+Num   Name                Type Len  Decimal
+-------------------------------------------
+"""
+
 
 def _unescape_separator(option, opt_str, value, parser):
     """
@@ -44,7 +62,7 @@ def _split_fields(option, opt_str, value, parser):
         value = tuple(f.upper().strip() for f in value.split(','))
     setattr(parser.values, option.dest, value)
 
-def show_info(files):
+def show_info(files, output):
     """
     Show info about files
     """
@@ -63,22 +81,11 @@ def show_info(files):
             'last_change': str(reader.dt),
             'fields_number': str(reader.numfields),
         }
-        print """\
-Filename:       %(filename)s
-Version:        %(signature)s (%(version)s)
-Encoding:       %(lang_code)s (%(encoding)s, %(language)s)
-Num of records: %(records_number)s
-Header length:  %(header_length)s
-Record length:  %(record_length)s
-Last change:    %(last_change)s
-Num of fields:  %(fields_number)s
-===========================================
-Num   Name                Type Len  Decimal
--------------------------------------------""" % header_info
+        output.write(_INFO_TEMPLATE % header_info)
 
         for i, (name, type_, length, dec) in enumerate(reader.fields):
-            print "% 3d.  %s  %s  %s  %d" % \
-                (i+1, name.ljust(20), type_, str(length).rjust(3), dec)
+            output.write("% 3d.  %s  %s  %s  %d\n" %
+                (i+1, name.ljust(20), type_, str(length).rjust(3), dec))
 
 def parse_options(args):
     """
@@ -136,9 +143,6 @@ def parse_options(args):
     options, args = parser.parse_args(args)
     if not args:
         parser.error('Files is required argument')
-    if options.info:
-        show_info(args)
-        sys.exit(0)
     return options, args
 
 def csv_output_generator(data_iterator, record_separator, field_separator):
@@ -146,7 +150,7 @@ def csv_output_generator(data_iterator, record_separator, field_separator):
     Make CSV-like output with specified record and field separators
     """
     for rec in data_iterator:
-        yield field_separator.join(str(f) for f in rec) + record_separator
+        yield field_separator.join(six.text_type(f) for f in rec) + record_separator
 
 def table_output_generator(fields_spec, data_iterator):
     """
@@ -200,7 +204,7 @@ def _escape_data(data_iterator, symbol_escape_to):
     Escapes field separator in data
     """
     for rec in data_iterator:
-        yield tuple(str(x).replace(symbol_escape_to,
+        yield tuple(six.text_type(x).replace(symbol_escape_to,
                                    '\\%s' % symbol_escape_to) for x in rec)
 
 def replace_null(data_iterator, undef):
@@ -226,7 +230,7 @@ def dbf_data(fh, fields=None):
     """
     Return a fields spec and data generator
     """
-    reader = YDbfStrictReader(fh, use_unicode=False)
+    reader = YDbfStrictReader(fh, use_unicode=True)
     if fields:
         fields_spec = [f for f in reader.fields if f[0] in fields]
         if len(fields_spec) != len(fields):
@@ -261,6 +265,8 @@ def dump(args):
         ofh = open(options.output, 'w')
     else:
         ofh = sys.stdout
+    if options.info:
+        return show_info(args, ofh)
     for filename in args:
         fh = open(filename, 'rb')
         fields_spec, data_iterator = dbf_data(fh, options.fields)

@@ -25,6 +25,7 @@ import decimal
 import os
 
 import ydbf
+from ydbf import dump
 from ydbf import lib
 from ydbf import six
 
@@ -426,6 +427,44 @@ class TestOpen(unittest.TestCase):
         dbf.write([{'ID': 1, 'VALUE': 'One'}])
         self.assertIsNone(dbf.flush())
         dbf.close()
+
+
+class TestYdbfDump(unittest.TestCase):
+    
+    def setUp(self):
+        super(TestYdbfDump, self).setUp()
+        _, filepath = tempfile.mkstemp(suffix='.dbf')
+        self.dbf_read_path = os.path.join(_TEST_DATA_DIR, 'simple.dbf')
+        self.output_temp_path = filepath
+    
+    def test_info(self):
+        args = ['-o', self.output_temp_path, '-i', self.dbf_read_path]
+        dump.dump(args)
+        with open(self.output_temp_path) as output:
+            info = output.read()
+        self.assertIn('simple.dbf', info)
+        self.assertIn('0x3 (dBASE III)', info)
+        self.assertIn('0x0 (ascii, ASCII)', info)
+        self.assertIn('Num of records: 3', info)
+    
+    def test_simple(self):
+        args = ['-o', self.output_temp_path, self.dbf_read_path]
+        dump.dump(args)
+        with open(self.output_temp_path) as output:
+            data = output.read()
+        self.assertIn('25:12.34:test:2006-05-07:True', data)
+    
+    def test_table_format(self):
+        args = ['-o', self.output_temp_path, '-t', self.dbf_read_path]
+        dump.dump(args)
+        with open(self.output_temp_path) as output:
+            table = output.read()
+        self.assertIn(' DTE_FLD ', table)
+        self.assertIn(' 2006-05-07 ', table)
+        
+         
+
+
 
 
 if __name__ == '__main__':

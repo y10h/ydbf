@@ -337,7 +337,7 @@ class YDbfStrictReader(YDbfReader):
                 os_size = os.stat(file_name)[6]
             except OSError:
                 return
-            dbf_size = long(self.lenheader + 1 + self.numrec*self.recsize)
+            dbf_size = int(self.lenheader + 1 + self.numrec*self.recsize)
             assert os_size == dbf_size, "Logical size (calculated from file " \
                                         "structure and number of records) " \
                                         "should be equal to size of file"
