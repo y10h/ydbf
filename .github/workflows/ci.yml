@@ -15,4 +15,4 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Run tests
       run: |
-        python setup.py install && pytest 
+        python setup.py install && python ydbf/test.py
