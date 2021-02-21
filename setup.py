@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.3rc1'
+version = '0.4'
 
 setup(name='YDbf',
       version=version,
@@ -13,11 +13,16 @@ represents DBF file as a data iterator, where
 each record is a dict.
 """,
       classifiers=[
-      'Development Status :: 3 - Alpha',
+      'Development Status :: 4 - Beta',
       'Intended Audience :: Developers',
       'License :: OSI Approved :: GNU General Public License (GPL)',
       'Operating System :: OS Independent',
       'Programming Language :: Python',
+      'Programming Language :: Python :: 2.7',
+      'Programming Language :: Python :: 3.5',
+      'Programming Language :: Python :: 3.6',
+      'Programming Language :: Python :: 3.7',
+      'Programming Language :: Python :: 3.8',
       'Topic :: Database',
       'Topic :: Software Development :: Libraries :: Python Modules',
       ],
