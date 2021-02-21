@@ -421,6 +421,12 @@ class TestOpen(unittest.TestCase):
         bytes_dbf = ydbf.open(self.dbf_read_path, use_unicode=False)
         self.assertFalse(bytes_dbf.encoding)
 
+    def test_open_doesnt_close_file(self):
+        dbf = ydbf.open(self.dbf_temp_path, 'w', self.fields)
+        dbf.write([{'ID': 1, 'VALUE': 'One'}])
+        self.assertIsNone(dbf.flush())
+        dbf.close()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -136,7 +136,7 @@ def open(dbf_file, mode='r', *args, **kwargs):
         raise ValueError("Wrong mode %s for ydbf.open" % mode)
     dbf_class = FILE_MODES[mode]
     if isinstance(dbf_file, six.string_types):
-        with builtins.open(dbf_file, '%sb' % mode) as fh:
-            return dbf_class(fh, *args, **kwargs)
+        fh = builtins.open(dbf_file, '%sb' % mode)
+        return dbf_class(fh, *args, **kwargs)
     else:
         return dbf_class(dbf_file, *args, **kwargs)
