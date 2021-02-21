@@ -5,7 +5,8 @@ Move DBF data (as single table) to RDBMS using SQLAlchemy
 
 import os
 import ydbf
-import sqlalchemy as sa
+from ydbf import six
+import sqlalchemy as sa  # Verified with SQLA v0.5-v1.3
 
 def _get_column_name(dbf_name):
     """
@@ -73,8 +74,8 @@ def __next_n(iterable, n=1):
     """
     res = []
     try:
-        for i in xrange(n):
-            res.append(iterable.next())
+        for i in range(n):
+            res.append(six.next(iterable))
     except StopIteration:
         pass
     return res
@@ -115,7 +116,7 @@ def make_meta(uri):
 
 def dbf2sa(dbf_name, sa_uri):
     """
-    Move DBF data (as single table) from file to RDBMS 
+    Move DBF data (as single table) from file to RDBMS
     
     Arguments:
         
