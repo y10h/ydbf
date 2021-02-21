@@ -1,14 +1,31 @@
-YDbf quickstart
-==============
+YDbf
+====
 
-Reading
--------
+YDbf - reading and writing DBF/XBase files in a pythonic way.
+The library written in pure Python and have no external
+dependencies.
+
+YDbf is compatible with Python 2.7+ and 3.5+.
+
+What YDbf is good for:
+
+ - export data to a DBF file
+ - import data from a DBF file
+ - read data from a DBF file as a stream
+
+Where YDbf is not a good fit:
+
+ - random access to records in a DBF file
+ - memo fields
+
+Read DBF
+--------
 
 The entrypoint of YDbf is `open` function:
 
     dbf = ydbf.open('simple.dbf')
 
-You can use file name, or already opened (in binary mode) file:
+You can use file name, or already opened in binary mode file:
 
     fh = open('simple.dbf', 'rb')
     dbf = ydbf.open(fh)
@@ -24,8 +41,8 @@ You may also use `with` statement:
 
 Each record is a dict, which keys are names of fields.
 
-Writing
--------
+Write DBF
+---------
 
 YDbf opens file for reading by default, but you may set option `mode` to
 open for writing:
@@ -52,20 +69,20 @@ For example:
     ]
 
 YDbf uses unicode for 'C' fields by default, so you may want to define
-encoding which be used forthe  DBF file. UTF-8 is not supported, you may
-use only 8-bit encodings.
+encoding which be used forthe  DBF file. UTF-8 is not supported,
+you may use only 8-bit encodings.
 
     dbf = ydbf.open('simple.dbf', 'w', fields, encoding='cp1251')
     dbf.write(data)
 
 YDbf gets `data` as an iterator where each item is a dict, which
-keys are name of fields. For example,
+keys are names of fields. For example,
 
     data = [
-        {'ID': 1, 'VALUE': u'ydbf', 'VISIBLE': True,
+        {'ID': 1, 'VALUE': 'ydbf', 'VISIBLE': True,
          'UPDATE': datetime.date(2009, 7, 14)},
-        {'ID': 2, 'VALUE': u'ydbf-dev', 'VISIBLE': False,
+        {'ID': 2, 'VALUE': 'ydbf-dev', 'VISIBLE': False,
          'UPDATE': datetime.date(2009, 5, 15)},
-        {'ID': 3, 'VALUE': u'pytils', 'VISIBLE': True,
+        {'ID': 3, 'VALUE': 'pytils', 'VISIBLE': True,
          'UPDATE': datetime.date(2009, 5, 11)},
     ]

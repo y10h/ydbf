@@ -1,8 +1,0 @@
-YDbf is a library for reading/writing DBF-files
-(also known as XBase) in a pythonic way. It is
-written in pure Python and have no external
-dependencies.
-
-YDbf works on Python 2.7+ and 3.5+.
-
-See additional doc in `doc` subdir.
