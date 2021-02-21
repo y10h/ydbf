@@ -1,17 +1,17 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.4'
+_README = os.path.join(os.path.dirname(__file__), 'README.md')
+with open(_README) as fh:
+    _LONG_DESCRIPTION = fh.read()
+
+version = '0.4.1'
 
 setup(name='YDbf',
       version=version,
       description="Pythonic reader and writer for DBF/XBase files",
-      long_description="""\
-YDbf is a library for reading/writing DBF files
-(also known as XBase) in a pythonic way. It
-represents DBF file as a data iterator, where
-each record is a dict.
-""",
+      long_description=_LONG_DESCRIPTION,
+      long_description_content_type='text/markdown',
       classifiers=[
       'Development Status :: 4 - Beta',
       'Intended Audience :: Developers',
@@ -30,7 +30,7 @@ each record is a dict.
       author='Yury Yurevich',
       author_email='python@y10h.com',
       url='https://github.com/y10h/ydbf',
-      license='GNU GPL2',
+      license='BSD',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=True,
