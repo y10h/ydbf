@@ -99,7 +99,7 @@ class YDbfWriter(object):
             return (val and six.ensure_binary(val, 'ascii')[:size].ljust(size)) or b' '*size
         
         def py2dbf_integer(val, size, dec):
-            return ((val and six.binary_type(str(val), 'ascii')) or b'0').rjust(size)
+            return ((val and six.ensure_binary(str(val), 'ascii')) or b'0').rjust(size)
         
         def py2dbf_decimal(val, size, dec):
             return ( (val and (b"%%.%df"%dec) % float(str(val))) or \
