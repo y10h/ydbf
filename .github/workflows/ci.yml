@@ -8,7 +8,7 @@ jobs:
         python-version: [2.7]
     steps:
     - name: Checkout
-      uses: action/checkout@v2
+      uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
