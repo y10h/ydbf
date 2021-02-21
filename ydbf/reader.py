@@ -20,17 +20,12 @@ DBF reader
 __all__ = ["YDbfStrictReader", "YDbfReader"]
 
 import datetime
+from decimal import Decimal
 from struct import calcsize, unpack
 from itertools import izip
 
 from ydbf import lib
 
-try:
-    from decimal import Decimal
-    decimal_enabled = True
-except ImportError:
-    Decimal = lambda x: float(x)
-    decimal_enabled = False
 
 class YDbfReader(object):
     """

@@ -16,7 +16,7 @@ You can use file name, or already opened (in binary mode) file:
     for record in dbf:
         ...
 
-If you have Python 2.5+, you may want to use `with` statement:
+You may also use `with` statement:
 
     with ydbf.open('simple.dbf') as dbf:
         for record in dbf:
