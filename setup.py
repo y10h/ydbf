@@ -8,10 +8,10 @@ setup(name='YDbf',
       description="Pythonic reader and writer for DBF/XBase files",
       long_description="""\
 YDbf is a library for reading/writing DBF files
-(also known as XBase) in pythonic way. It 
-represents DBF file as data iterator, where
-each record is a simple dict.
-.""",
+(also known as XBase) in a pythonic way. It
+represents DBF file as a data iterator, where
+each record is a dict.
+""",
       classifiers=[
       'Development Status :: 3 - Alpha',
       'Intended Audience :: Developers',
@@ -23,8 +23,8 @@ each record is a simple dict.
       ],
       keywords='',
       author='Yury Yurevich',
-      author_email='the.pythy@gmail.com',
-      url='http://www.pyobject.ru/projects/YDbf',
+      author_email='python@y10h.com',
+      url='https://github.com/y10h/ydbf',
       license='GNU GPL2',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,

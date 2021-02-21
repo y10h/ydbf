@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
+# encoding: utf-8
 # YDbf - Pythonic reader and writer for DBF/XBase files
-# Inspired by code of Raymond Hettinger
-# http://code.activestate.com/recipes/362715
 #
-# Copyright (C) 2006-2010 Yury Yurevich and contributors
+# Copyright (C) 2006-2021 Yury Yurevich and contributors
 #
-# http://pyobject.ru/projects/ydbf/
+# https://github.com/y10h/ydbf
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -45,7 +43,7 @@ ENCODINGS = {
     0xC9:    ('cp1251', 'Russian Windows'),
     0xCA:    ('cp1254', 'Turkish Windows'),
     0xCB:    ('cp1253', 'Greek Windows'),
-    ## these encodings doesn't supported by python
+    ## These encodings are not supported by Python but a part of DBF spec.
     # 0x68:    ('cp895', 'Kamenicky (Czech) MS-DOS'),
     # 0x69:    ('cp790', 'Mazovia (Polish) MS-DOS'),
 }

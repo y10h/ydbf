@@ -1,4 +1,0 @@
-Before YDbf is reached 0.1 version it is highly recommended to install
-latest snapshot via easy_install:
-
-    easy_install YDbf==dev

@@ -1,12 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# encoding: utf-8
 # YDbf - Pythonic reader and writer for DBF/XBase files
-# Inspired by code of Raymond Hettinger
-# http://code.activestate.com/recipes/362715
 #
-# Copyright (C) 2006-2010 Yury Yurevich and contributors
+# Copyright (C) 2006-2021 Yury Yurevich and contributors
 #
-# http://pyobject.ru/projects/ydbf/
+# https://github.com/y10h/ydbf
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License

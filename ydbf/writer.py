@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
+# encoding: utf-8
 # YDbf - Pythonic reader and writer for DBF/XBase files
-# Inspired by code of Raymond Hettinger
-# http://code.activestate.com/recipes/362715
 #
-# Copyright (C) 2006-2010 Yury Yurevich and contributors
+# Copyright (C) 2006-2021 Yury Yurevich and contributors
 #
-# http://pyobject.ru/projects/ydbf/
+# https://github.com/y10h/ydbf
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -32,21 +30,21 @@ class YDbfWriter(object):
     """
     def __init__(self, fh, fields, use_unicode=True, encoding='ascii'):
         """
-        Create DBF writer
+        Creates DBF writer
         
         Args:
             `fh`:
-                filehandler, should be opened for binary writing
+                filehandler, should be opened for binary write
             `fields`:
                 fields structure in format
                 
-                    [(NAME, TYP, SIZE, DEC), ...]
+                    [(NAME, TYPE, SIZE, DECIMAL), ...]
                 
-                where `NAME` is name of field (should be string),
-                `TYP` is a DBF type (string from ("N", "D", "C", "L")),
-                `SIZE` is a length of field (integer) and `DEC` -- length
+                `NAME` is name of field (should be string),
+                `TYPE` is a DBF type (string from ("N", "D", "C", "L")),
+                `SIZE` is a length of field (integer) and `DECIMAL` -- length
                 of decimal part (number of digits after the point). `SIZE`
-                should include `DEC`.
+                should include `DECIMAL`.
             `use_unicode`:
                 use unicode mode (traiting all string data as unicode) or not,
                 default is True
