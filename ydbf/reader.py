@@ -22,7 +22,6 @@ __all__ = ["YDbfStrictReader", "YDbfReader"]
 import datetime
 from decimal import Decimal
 from struct import calcsize, unpack
-from itertools import izip
 
 from ydbf import lib
 
@@ -48,14 +47,14 @@ class YDbfReader(object):
             `use_unicode`:
                 convert all char fields to unicode. Use builtin
                 encoding (formerly lang code from DBF file) or
-                implicitly defined encoding via `encoding` arg.
+                explicitly defined encoding via `encoding` arg.
             
             `encoding`:
-                force usage of implicitly defined encoding
+                force usage of explicitly defined encoding
                 instead of builtin one. By default None.
         """
         self.fh = fh             # filehandler
-        self.implicit_encoding = encoding
+        self.explicit_encoding = encoding
         if fields:
             self._fields = [('_deletion_flag', 'C', 1, 0)] + list(fields)
             self.fields = list(fields)
@@ -104,7 +103,7 @@ class YDbfReader(object):
             return self.dbf2date(val)
         
         def dbf2py_logic(val, size, dec):
-            return val.strip() in ("Y", "y", "T", "t")
+            return val.strip() in (b"Y", b"y", b"T", b"t")
         
         def dbf2py_unicode(val, size, dec):
             return val.decode(self.encoding).rstrip()
@@ -160,16 +159,19 @@ class YDbfReader(object):
         
         numfields = (lenheader - 33) // 32
         fields = []
-        for fieldno in xrange(numfields):
+        for fieldno in range(numfields):
             name, typ, size, deci = unpack(lib.FIELD_DESCRIPTION_FORMAT,
                                                   self.fh.read(32))
-            name = name.split('\0', 1)[0]       # NULL is a end of string
-            if typ not in ('N', 'D', 'L', 'C'):
-                raise ValueError("Unknown type %r on field %s" % (typ, name))
-            fields.append((name, typ, size, deci))
+            name = name.split(b'\0', 1)[0]       # NULL is a end of string
+            type_string = typ.decode('ascii')
+            name_string = name.decode('ascii')
+            if type_string not in ('N', 'D', 'L', 'C'):
+                raise ValueError("Unknown type {} on field {}".format(
+                    type_string, name_string))
+            fields.append((name_string, type_string, size, deci))
 
         terminator = self.fh.read(1)
-        if terminator != '\x0d':
+        if terminator != b'\x0d':
             raise ValueError("Terminator should be 0x0d. Terminator is a "
                              "delimiter, which splits header and data "
                              "sections in file. By specification it should be "
@@ -181,7 +183,7 @@ class YDbfReader(object):
         self.builtin_fields = fields[1:] # without _deletion_flag
         if not self.fields:
             self.fields = self.builtin_fields
-            self._fields = self.builtin__fields	
+            self._fields = self.builtin__fields
         self.raw_lang = lang
         self.recfmt = ''.join(['%ds' % fld[2] for fld in self._fields])
         self.recsize = calcsize(self.recfmt)
@@ -193,7 +195,7 @@ class YDbfReader(object):
 
     def _defineEncoding(self):
         self.builtin_encoding = lib.ENCODINGS.get(self.raw_lang, (None,))[0]
-        if self.builtin_encoding is None and self.implicit_encoding is None:
+        if self.builtin_encoding is None and self.explicit_encoding is None:
             raise ValueError("Cannot resolve builtin lang code %s "
                              "to encoding and no option `encoding` "
                              "passed, but `use_unicode` are, so "
@@ -201,8 +203,8 @@ class YDbfReader(object):
                              "to unicode. Please, set up option `encoding` "
                              "or set `use_unicode` to False"
                              % hex(self.raw_lang))
-        if self.implicit_encoding:
-            self.encoding = self.implicit_encoding
+        if self.explicit_encoding:
+            self.encoding = self.explicit_encoding
         else:
             self.encoding = self.builtin_encoding
 
@@ -247,17 +249,17 @@ class YDbfReader(object):
 
         converters = tuple((self.converters[name], name, size, dec)
                            for name, typ, size, dec in self._fields)
-        for i in xrange(self.start_from, self.stop_at):
+        for i in range(self.start_from, self.stop_at):
             record = unpack(self.recfmt, self.fh.read(self.recsize))
-            if not show_deleted and record[0] != ' ':
+            if not show_deleted and record[0] != b' ':
                 # deleted record
                 continue
             try:
-                yield dict((name, conv(val.rstrip('\x00'), size, dec))
+                yield dict((name, conv(val.rstrip(b'\x00'), size, dec))
                             for (conv, name, size, dec), val
-                            in izip(converters, record)
+                            in zip(converters, record)
                             if (name != '_deletion_flag' or show_deleted))
-            except UnicodeDecodeError, err:
+            except UnicodeDecodeError as err:
                 args = list(err.args[:-1]) + [
                     "Error occured while reading rec #%d. You are "
                     "using YDbfReader with unicode-related options: "
@@ -266,9 +268,9 @@ class YDbfReader(object):
                     "in DBF file is not encoded with %s encoding, so you "
                     "should manually define encoding by setting up `encoding` "
                     "option" % (i, self.encoding, self.builtin_encoding,
-                    hex(self.raw_lang), self.implicit_encoding, self.encoding)]
+                    hex(self.raw_lang), self.explicit_encoding, self.encoding)]
                 raise UnicodeDecodeError(*args)
-            except (IndexError, ValueError, TypeError, KeyError), err:
+            except (IndexError, ValueError, TypeError, KeyError) as err:
                 raise RuntimeError("Error occured (%s: %s) while reading rec "
                                    "#%d" % (err.__class__.__name__, err, i))
 

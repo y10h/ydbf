@@ -20,6 +20,8 @@ Common lib for both reader and writer
 
 import datetime
 
+from ydbf import six
+
 # Reference data
 
 ENCODINGS = {
@@ -134,7 +136,7 @@ def date2dbf(dt):
     """
     if not isinstance(dt, datetime.date):
         raise TypeError("Espects datetime.date instead of %s" % type(dt))
-    return "%04d%02d%02d" % (dt.year, dt.month, dt.day)
+    return b"%04d%02d%02d" % (dt.year, dt.month, dt.day)
     
 def dbf2str(dbf_str):
     """
@@ -142,14 +144,15 @@ def dbf2str(dbf_str):
     
     Args:
         `dbf_str`:
-            dbf-date (string in format YYYYMMDD)
+            dbf-date (bytes in format YYYYMMDD)
     """
     if dbf_str is None or not dbf_str.isdigit() or len(dbf_str) != 8:
         result = None
     else:
-        result = ".".join( reversed( (dbf_str[:4],
-                                      dbf_str[4:6],
-                                      dbf_str[6:8]) ) )
+        string_date = six.ensure_text(dbf_str)
+        result = ".".join(reversed((string_date[:4],
+                                    string_date[4:6],
+                                    string_date[6:8])))
     return result
 
 def str2dbf(dt_str):
@@ -160,7 +163,7 @@ def str2dbf(dt_str):
         `dt_str`:
             string in format DD.MM.YYYY
     """
-    if not isinstance(dt_str, basestring):
+    if not isinstance(dt_str, six.string_types):
         raise TypeError("Espects string or unicode instead of %s"
                          % type(dt_str))
     str_l = len(dt_str)
@@ -168,7 +171,8 @@ def str2dbf(dt_str):
         raise ValueError('Datestring must be 10 symbols (DD.MM.YYYY) '
                          'length instead of %d' % str_l)
     d, m, y = dt_str.split('.')
-    return ''.join((y, m, d))
+    dbf_string = ''.join((y, m, d))
+    return six.ensure_binary(dbf_string, 'ascii')
 
 # References:
 # [dbfspec]: http://www.clicketyclick.dk/databases/xbase/format/index.html
