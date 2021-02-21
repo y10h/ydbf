@@ -98,9 +98,8 @@ try:
 except ImportError:
     VERSION = 'N/A'
 
-import builtins
-
 from ydbf import six
+from ydbf.six.moves import builtins
 from ydbf.reader import YDbfReader
 from ydbf.writer import YDbfWriter
 
