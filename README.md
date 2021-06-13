@@ -5,7 +5,8 @@ YDbf - reading and writing DBF/XBase files in a pythonic way.
 The library written in pure Python and have no external
 dependencies.
 
-YDbf is compatible with Python 2.7+ and 3.5+.
+YDbf is compatible with Python and 3.5+. The last 2.7-compatible
+version of YDbf is 0.4.1.
 
 What YDbf is good for:
 
