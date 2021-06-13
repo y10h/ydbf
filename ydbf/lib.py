@@ -10,6 +10,15 @@ Common lib for both reader and writer
 
 import datetime
 
+# Types of fields.
+CHAR = 'C'
+NUMERAL = 'N'
+DATE = 'D'
+LOGICAL = 'L'
+
+# System encoding which is used to convert field names between bytes and string.
+SYSTEM_ENCODING = 'ascii'
+
 # Reference data
 
 ENCODINGS = {
@@ -137,7 +146,7 @@ def dbf2str(dbf_str):
     if dbf_str is None or not dbf_str.isdigit() or len(dbf_str) != 8:
         result = None
     else:
-        string_date = dbf_str.decode('ascii')
+        string_date = dbf_str.decode(SYSTEM_ENCODING)
         result = ".".join(reversed((string_date[:4],
                                     string_date[4:6],
                                     string_date[6:8])))
@@ -160,7 +169,7 @@ def str2dbf(dt_str):
                          'length instead of %d' % str_l)
     d, m, y = dt_str.split('.')
     dbf_string = ''.join((y, m, d))
-    return dbf_string.encode('ascii')
+    return dbf_string.encode(SYSTEM_ENCODING)
 
 # References:
 # [dbfspec]: http://www.clicketyclick.dk/databases/xbase/format/index.html

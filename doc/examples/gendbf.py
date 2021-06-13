@@ -77,7 +77,7 @@ def get_l_random(size, dec):
 def get_rec(fields_struct):
     rec = {}
     for name, typ, size, dec in fields_struct:
-        assert typ in ('N', 'D', 'C', 'L')
+        assert typ in (ydbf.CHAR, ydbf.DATE, ydbf.LOGICAL, ydbf.NUMERAL)
         getter = globals().get("get_%s_random" % typ.lower())
         if not callable(getter):
             raise ValueError("Cannot get data getter for DBF type %s (field %s)" % (typ, name))
@@ -88,18 +88,20 @@ def get_rec(fields_struct):
 
 def get_field():
     size_limits = {
-        'N': (1, 19),
-        'C': (1, 254),
-        'L': (1, 1),
-        'D': (8, 8),
+        ydbf.NUMERAL: (1, 19),
+        ydbf.CHAR: (1, 254),
+        ydbf.LOGICAL: (1, 1),
+        ydbf.DATE: (8, 8),
     }
     name = str(get_c_random(11, 0, force_ascii=True).replace(u' ', '_'))
     # most popular field type is a numeric
     # next string, next date and the last -- logical
-    typ = random.choice(('N', 'N', 'N', 'N', 'C', 'C', 'C', 'D', 'D', 'L'))
+    typ = random.choice(
+        (ydbf.NUMERAL, ydbf.NUMERAL, ydbf.NUMERAL, ydbf.NUMERAL, ydbf.CHAR,
+         ydbf.CHAR, ydbf.CHAR, ydbf.DATE, ydbf.DATE, ydbf.LOGICAL))
     size = random.randint(*size_limits[typ])
     dec = 0
-    if typ == 'N' and size > 6:
+    if typ == ydbf.NUMERAL and size > 6:
         rand_dec = random.randint(0, int(size/2))
         dec = random.choice((0, rand_dec))
     return name, typ, size, dec
@@ -114,7 +116,7 @@ def get_data(fields_structure, number_of_records):
 def gendbf(filename, number_of_records=2000, fields_number=20):
     fh = open(filename, 'wb')
     fields = get_fields_structure(fields_number)
-    dbf = ydbf.open(filename, 'w', fields, encoding='cp1251')
+    dbf = ydbf.open(filename, ydbf.WRITE, fields, encoding='cp1251')
     dbf.write(get_data(fields, number_of_records))
     dbf.close()
 

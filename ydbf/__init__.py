@@ -39,32 +39,40 @@ Writing
 YDbf opens file for reading by default, but you may set option `mode` to
 open for writing:
 
-    dbf = ydbf.open('simple.dbf', 'w', fields)
+    dbf = ydbf.open('simple.dbf', ydbf.WRITE, fields)
 
 or open file yourself:
 
     fh = open('simple.dbf', 'wb')
-    dbf = ydbf.open(fh, 'w', fields)
+    dbf = ydbf.open(fh, ydbf.WRITE, fields)
 
 `fields` is a structure description of DBF file, it is a required option for
 write mode. The structure is as sequence of field descriptions,
 where each fields described by tuple (NAME, TYPE, SIZE, DECIMAL). NAME
 is a name of field, TYPE -- DBF type of field ('N' for number, 'C' for char,
 'D' for date, 'L' for logical), DECIMAL is a precision (useful for 'N' type only).
-For example:
+
+YDbf offers the field types as constants:
+ - ydbf.CHAR
+ - ydbf.DATE
+ - ydbf.LOGICAL
+ - ydbf.NUMERAL
+
+An example of the fields definition:
 
     fields = [
-        ('ID',      'N',  4, 0),
-        ('VALUE',   'C', 40, 0),
-        ('UPDATE',  'D', 8, 0),
-        ('VISIBLE', 'L', 1, 0),
+        ('ID',      ydbf.NUMERAL,  4, 0),
+        ('VALUE',   ydbf.CHAR, 40, 0),
+        ('UPDATE',  ydbf.DATE, 8, 0),
+        ('VISIBLE', ydbf.LOGICAL, 1, 0),
     ]
+
 
 YDbf uses unicode for 'C' fields by default, so you may want to define
 encoding which be used forthe  DBF file. UTF-8 is not supported, you may
 use only 8-bit encodings.
 
-    dbf = ydbf.open('simple.dbf', 'w', fields, encoding='cp1251')
+    dbf = ydbf.open('simple.dbf', ydbf.WRITE, fields, encoding='cp1251')
     dbf.write(data)
 
 YDbf gets `data` as an iterator where each item is a dict, which
@@ -90,16 +98,26 @@ except ImportError:
 
 import builtins
 
+# Import types constants from lib so they are available at package level.
+from ydbf.lib import CHAR
+from ydbf.lib import DATE
+from ydbf.lib import LOGICAL
+from ydbf.lib import NUMERAL
+
+
 from ydbf.reader import YDbfReader
 from ydbf.writer import YDbfWriter
 
+READ = 'r'
+WRITE = 'w'
 
 FILE_MODES = {
-    'r': YDbfReader,
-    'w': YDbfWriter,
+    READ: YDbfReader,
+    WRITE: YDbfWriter,
 }
 
-def open(dbf_file, mode='r', *args, **kwargs):
+
+def open(dbf_file, mode=READ, *args, **kwargs):
     """
     Open DBF for reading or writing
     

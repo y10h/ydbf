@@ -7,7 +7,6 @@
 """
 DBF writer
 """
-__all__ = ["YDbfWriter"]
 
 import struct
 import datetime
@@ -15,14 +14,11 @@ import datetime
 from ydbf import lib
 
 
-_ASCII = 'ascii'
-
-
 class YDbfWriter(object):
     """
     Writes DBF from iterator
     """
-    def __init__(self, fh, fields, use_unicode=True, encoding=_ASCII):
+    def __init__(self, fh, fields, use_unicode=True, encoding='ascii'):
         """
         Creates DBF writer
         
@@ -89,10 +85,10 @@ class YDbfWriter(object):
                    b' '*size
         
         def py2dbf_string(val, size, dec):
-            return (val and val.encode(_ASCII)[:size].ljust(size)) or b' '*size
+            return (val and val.encode(lib.SYSTEM_ENCODING)[:size].ljust(size)) or b' '*size
         
         def py2dbf_integer(val, size, dec):
-            return ((val and str(val).encode(_ASCII)) or b'0').rjust(size)
+            return ((val and str(val).encode(lib.SYSTEM_ENCODING)) or b'0').rjust(size)
         
         def py2dbf_decimal(val, size, dec):
             return ( (val and (b"%%.%df"%dec) % float(str(val))) or \
@@ -100,14 +96,14 @@ class YDbfWriter(object):
                    ).rjust(size)
         
         self.action_resolvers = (
-            lambda typ, size, dec: (typ == 'C' and self.use_unicode) and \
+            lambda typ, size, dec: (typ == lib.CHAR and self.use_unicode) and \
                                    py2dbf_unicode,
-            lambda typ, size, dec: (typ == 'C' and not self.use_unicode) and \
+            lambda typ, size, dec: (typ == lib.CHAR and not self.use_unicode) and \
                                    py2dbf_string,
-            lambda typ, size, dec: (typ == 'N' and dec) and py2dbf_decimal,
-            lambda typ, size, dec: (typ == 'N' and not dec) and py2dbf_integer,
-            lambda typ, size, dec: typ == 'D' and py2dbf_date,
-            lambda typ, size, dec: typ == 'L' and py2dbf_logic,
+            lambda typ, size, dec: (typ == lib.NUMERAL and dec) and py2dbf_decimal,
+            lambda typ, size, dec: (typ == lib.NUMERAL and not dec) and py2dbf_integer,
+            lambda typ, size, dec: typ == lib.DATE and py2dbf_date,
+            lambda typ, size, dec: typ == lib.LOGICAL and py2dbf_logic,
         )
         for name, typ, size, dec in self.fields:
             for resolver in self.action_resolvers:
@@ -132,10 +128,10 @@ class YDbfWriter(object):
                                self.recsize, self.lang)
         self.fh.write(self.hdr)
         for name, typ, size, deci in self.fields:
-            if typ not in ('N', 'D', 'L', 'C'):
+            if typ not in (lib.CHAR, lib.DATE, lib.LOGICAL, lib.NUMERAL):
                 raise ValueError("Unknown type %r on field %s" % (typ, name))
-            name_bytes = name.encode(_ASCII)
-            type_bytes = typ.encode(_ASCII)
+            name_bytes = name.encode(lib.SYSTEM_ENCODING)
+            type_bytes = typ.encode(lib.SYSTEM_ENCODING)
             padded_name_bytes = name_bytes.ljust(11, b'\x00')
             fld = struct.pack(lib.FIELD_DESCRIPTION_FORMAT,
                               padded_name_bytes, type_bytes, size, deci)

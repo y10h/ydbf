@@ -155,13 +155,13 @@ def table_output_generator(fields_spec, data_iterator):
     newline = '\n' # maybe better use os.linesep?
     # for some types maximal length is fixed, use it
     fixed_length_types = {
-        'D': 10,
-        'L': 5,
+        lib.DATE: 10,
+        lib.LOGICAL: 5,
     }
     for name, type_, length, dec in fields_spec:
         if type_ in fixed_length_types:
             length = fixed_length_types[type_]
-        if type_ != 'N':
+        if type_ != lib.NUMERAL:
             holder = '%% -%ds' % length
         else:
             if dec:

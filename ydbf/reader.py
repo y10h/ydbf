@@ -7,7 +7,6 @@
 """
 DBF reader
 """
-__all__ = ["YDbfStrictReader", "YDbfReader"]
 
 import datetime
 from decimal import Decimal
@@ -46,7 +45,7 @@ class YDbfReader(object):
         self.fh = fh             # filehandler
         self.explicit_encoding = encoding
         if fields:
-            self._fields = [('_deletion_flag', 'C', 1, 0)] + list(fields)
+            self._fields = [('_deletion_flag', lib.CHAR, 1, 0)] + list(fields)
             self.fields = list(fields)
             self.builtin_fields = []
             self.builtin__fields = []
@@ -108,14 +107,14 @@ class YDbfReader(object):
             return Decimal(('%%.%df'%dec) % float(val.strip() or 0.0))
 
         self.action_resolvers = (
-            lambda typ, size, dec: (typ == 'C' and self.encoding) and \
+            lambda typ, size, dec: (typ == lib.CHAR and self.encoding) and \
                                     dbf2py_unicode,
-            lambda typ, size, dec: (typ == 'C' and not self.encoding) and \
+            lambda typ, size, dec: (typ == lib.CHAR and not self.encoding) and \
                                     dbf2py_string,
-            lambda typ, size, dec: (typ == 'N' and dec) and dbf2py_decimal,
-            lambda typ, size, dec: (typ == 'N' and not dec) and dbf2py_integer,
-            lambda typ, size, dec: typ == 'D' and dbf2py_date,
-            lambda typ, size, dec: typ == 'L' and dbf2py_logic,
+            lambda typ, size, dec: (typ == lib.NUMERAL and dec) and dbf2py_decimal,
+            lambda typ, size, dec: (typ == lib.NUMERAL and not dec) and dbf2py_integer,
+            lambda typ, size, dec: typ == lib.DATE and dbf2py_date,
+            lambda typ, size, dec: typ == lib.LOGICAL and dbf2py_logic,
         )
         for name, typ, size, dec in self._fields:
             for resolver in self.action_resolvers:
@@ -153,9 +152,9 @@ class YDbfReader(object):
             name, typ, size, deci = unpack(lib.FIELD_DESCRIPTION_FORMAT,
                                                   self.fh.read(32))
             name = name.split(b'\0', 1)[0]       # NULL is a end of string
-            type_string = typ.decode('ascii')
-            name_string = name.decode('ascii')
-            if type_string not in ('N', 'D', 'L', 'C'):
+            type_string = typ.decode(lib.SYSTEM_ENCODING)
+            name_string = name.decode(lib.SYSTEM_ENCODING)
+            if type_string not in (lib.CHAR, lib.DATE, lib.LOGICAL, lib.NUMERAL):
                 raise ValueError("Unknown type {} on field {}".format(
                     type_string, name_string))
             fields.append((name_string, type_string, size, deci))
@@ -168,7 +167,7 @@ class YDbfReader(object):
                              "0x0d, but it '%s'. This may be as result of "
                              "corrupted file, non-DBF data or error in YDbf "
                              "library." % hex(terminator))
-        fields.insert(0, ('_deletion_flag', 'C', 1, 0))
+        fields.insert(0, ('_deletion_flag', lib.CHAR, 1, 0))
         self.builtin__fields = fields  # with _deletion_flag
         self.builtin_fields = fields[1:] # without _deletion_flag
         if not self.fields:
@@ -309,13 +308,13 @@ class YDbfStrictReader(YDbfReader):
 
         ## check fields, round 2
         for f_name, f_type, f_size, f_decimal in self.fields:
-            if f_type == 'N':
+            if f_type == lib.NUMERAL:
                 assert f_size < 20, "Size of numeral field must be <20 " \
                                     "(field '%s', size %d)" % (f_name, f_size)
-            if f_type == 'C':
+            if f_type == lib.CHAR:
                 assert f_size < 255, "Size of numeral field must be <255 " \
                                      "(field '%s', size %d)" % (f_name, f_size)
-            if f_type == 'L':
+            if f_type == lib.LOGICAL:
                 assert f_size == 1, "Size of logical field must be 1 (field " \
                                     "'%s', size %d)" % (f_name, f_size)
 
