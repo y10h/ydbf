@@ -9,15 +9,16 @@ Unit-tests for YDbf
 """
 
 import datetime
-import unittest
-import tempfile
 import decimal
+import io
 import os
+import tempfile
+import unittest
 
 import ydbf
 from ydbf import dump
 from ydbf import lib
-from ydbf import six
+
 
 _TEST_DATA_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), 'testdata'))
@@ -109,22 +110,22 @@ class TestYDbfReader(unittest.TestCase):
         Unit-test for reader's constructor
         """
         dbf_data = fh.read()
-        self.assertEqual(ydbf.YDbfReader(six.BytesIO(dbf_data)).raw_lang,
+        self.assertEqual(ydbf.YDbfReader(io.BytesIO(dbf_data)).raw_lang,
                           0)
-        self.assertEqual(ydbf.YDbfReader(six.BytesIO(dbf_data), use_unicode=True
+        self.assertEqual(ydbf.YDbfReader(io.BytesIO(dbf_data), use_unicode=True
                                     ).raw_lang,
                           0)
-        self.assertEqual(ydbf.YDbfReader(six.BytesIO(dbf_data), use_unicode=True
+        self.assertEqual(ydbf.YDbfReader(io.BytesIO(dbf_data), use_unicode=True
                                     ).encoding,
                           'ascii')
-        self.assertEqual(ydbf.YDbfReader(six.BytesIO(dbf_data), use_unicode=False
+        self.assertEqual(ydbf.YDbfReader(io.BytesIO(dbf_data), use_unicode=False
                                     ).encoding,
                           None)
         # without unicode encoding means nothing
-        self.assertEqual(ydbf.YDbfReader(six.BytesIO(dbf_data), use_unicode=False,
+        self.assertEqual(ydbf.YDbfReader(io.BytesIO(dbf_data), use_unicode=False,
                                      encoding='cp866').encoding,
                           None)
-        self.assertEqual(ydbf.YDbfReader(six.BytesIO(dbf_data), use_unicode=True,
+        self.assertEqual(ydbf.YDbfReader(io.BytesIO(dbf_data), use_unicode=True,
                                      encoding='cp866').encoding,
                           'cp866')
     
@@ -333,7 +334,7 @@ class TestYdbfWriter(unittest.TestCase):
                        ('CHR_FLD',      'C', 6, 0),
                        ('DTE_FLD',      'D', 8, 0),
                        ('BLN_FLD',      'L', 1, 0)]
-        self.fh = six.BytesIO()
+        self.fh = io.BytesIO()
         self.dbf = ydbf.YDbfWriter(self.fh, self.fields)
     
     def test_header(self):
@@ -364,7 +365,7 @@ class TestYdbfWriter(unittest.TestCase):
             ('DTE_FLD', 'D', 8, 0),
             ('BLN_FLD', 'L', 1, 0),
         )
-        fh = six.BytesIO(b"")
+        fh = io.BytesIO(b"")
         with self.assertRaises(ValueError):
             ydbf.YDbfWriter(fh, fields)
 
@@ -374,7 +375,7 @@ class TestOpen(unittest.TestCase):
         super(TestOpen, self).setUp()
         _, filepath = tempfile.mkstemp(suffix='.dbf')
         self.dbf_read_path = os.path.join(_TEST_DATA_DIR, 'simple.dbf')
-        self.dbf_fh = six.BytesIO()
+        self.dbf_fh = io.BytesIO()
         self.dbf_temp_path = filepath
         self.fields = (
             ('ID', 'N', 8, 0),

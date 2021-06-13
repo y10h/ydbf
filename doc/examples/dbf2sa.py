@@ -5,7 +5,6 @@ Move DBF data (as single table) to RDBMS using SQLAlchemy
 
 import os
 import ydbf
-from ydbf import six
 import sqlalchemy as sa  # Verified with SQLA v0.5-v1.3
 
 def _get_column_name(dbf_name):
@@ -75,7 +74,7 @@ def __next_n(iterable, n=1):
     res = []
     try:
         for i in range(n):
-            res.append(six.next(iterable))
+            res.append(next(iterable))
     except StopIteration:
         pass
     return res

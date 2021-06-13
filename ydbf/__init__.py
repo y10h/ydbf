@@ -88,8 +88,8 @@ try:
 except ImportError:
     VERSION = 'N/A'
 
-from ydbf import six
-from ydbf.six.moves import builtins
+import builtins
+
 from ydbf.reader import YDbfReader
 from ydbf.writer import YDbfWriter
 
@@ -125,8 +125,8 @@ def open(dbf_file, mode='r', *args, **kwargs):
     if mode not in FILE_MODES:
         raise ValueError("Wrong mode %s for ydbf.open" % mode)
     dbf_class = FILE_MODES[mode]
-    if isinstance(dbf_file, six.string_types):
-        fh = builtins.open(dbf_file, '%sb' % mode)
+    if isinstance(dbf_file, str):
+        fh = builtins.open(dbf_file, '{mode}b'.format(mode=mode))
         return dbf_class(fh, *args, **kwargs)
     else:
         return dbf_class(dbf_file, *args, **kwargs)

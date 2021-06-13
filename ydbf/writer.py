@@ -13,13 +13,16 @@ import struct
 import datetime
 
 from ydbf import lib
-from ydbf import six
+
+
+_ASCII = 'ascii'
+
 
 class YDbfWriter(object):
     """
     Writes DBF from iterator
     """
-    def __init__(self, fh, fields, use_unicode=True, encoding='ascii'):
+    def __init__(self, fh, fields, use_unicode=True, encoding=_ASCII):
         """
         Creates DBF writer
         
@@ -86,10 +89,10 @@ class YDbfWriter(object):
                    b' '*size
         
         def py2dbf_string(val, size, dec):
-            return (val and six.ensure_binary(val, 'ascii')[:size].ljust(size)) or b' '*size
+            return (val and val.encode(_ASCII)[:size].ljust(size)) or b' '*size
         
         def py2dbf_integer(val, size, dec):
-            return ((val and six.ensure_binary(str(val), 'ascii')) or b'0').rjust(size)
+            return ((val and str(val).encode(_ASCII)) or b'0').rjust(size)
         
         def py2dbf_decimal(val, size, dec):
             return ( (val and (b"%%.%df"%dec) % float(str(val))) or \
@@ -115,7 +118,6 @@ class YDbfWriter(object):
             if not action:
                 raise ValueError("Cannot find python-to-dbf converter "
                                  "for field %s (type %s)" % (name, typ))
-        
 
     def _writeHeader(self):
         """
@@ -132,8 +134,8 @@ class YDbfWriter(object):
         for name, typ, size, deci in self.fields:
             if typ not in ('N', 'D', 'L', 'C'):
                 raise ValueError("Unknown type %r on field %s" % (typ, name))
-            name_bytes = name.encode('ascii')
-            type_bytes = typ.encode('ascii')
+            name_bytes = name.encode(_ASCII)
+            type_bytes = typ.encode(_ASCII)
             padded_name_bytes = name_bytes.ljust(11, b'\x00')
             fld = struct.pack(lib.FIELD_DESCRIPTION_FORMAT,
                               padded_name_bytes, type_bytes, size, deci)

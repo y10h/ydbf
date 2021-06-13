@@ -5,12 +5,11 @@
 #
 # https://github.com/y10h/ydbf
 """
-YDbf dumper script
+YDbf data-dump script
 """
 import sys
 from optparse import OptionParser
 from ydbf import lib
-from ydbf import six
 from ydbf import VERSION
 from ydbf.reader import YDbfStrictReader
 
@@ -140,7 +139,7 @@ def csv_output_generator(data_iterator, record_separator, field_separator):
     Make CSV-like output with specified record and field separators
     """
     for rec in data_iterator:
-        yield field_separator.join(six.text_type(f) for f in rec) + record_separator
+        yield field_separator.join(str(f) for f in rec) + record_separator
 
 def table_output_generator(fields_spec, data_iterator):
     """
@@ -194,8 +193,8 @@ def _escape_data(data_iterator, symbol_escape_to):
     Escapes field separator in data
     """
     for rec in data_iterator:
-        yield tuple(six.text_type(x).replace(symbol_escape_to,
-                                   '\\%s' % symbol_escape_to) for x in rec)
+        yield tuple(str(x).replace(symbol_escape_to,
+                    '\\%s' % symbol_escape_to) for x in rec)
 
 def replace_null(data_iterator, undef):
     """
