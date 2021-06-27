@@ -1,0 +1,8 @@
+**/__pycache__/**
+*.pyc
+YDbf.egg-info/
+build/
+dist/
+doc/examples/*.dbf
+doc/examples/converted.db
+
