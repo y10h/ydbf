@@ -40,7 +40,7 @@ def _create_column(dbf_name, dbf_type, dbf_length, dbf_decimal):
     elif dbf_type == ydbf.LOGICAL:
         sa_type = sa.Boolean
     else:
-        raise ValueError("Dosen't know how convert %r type" % dbf_type)
+        raise ValueError("Doesn't know how convert %r type" % dbf_type)
     return sa.Column(_get_column_name(dbf_name), sa_type)
 
 
