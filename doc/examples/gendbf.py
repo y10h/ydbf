@@ -135,14 +135,14 @@ def main(args):
             number_of_records = int(args[1])
             call.append(number_of_records)
         except ValueError:
-            print('Err: '%s' is not valid integer for number_of_records' % args[1])
+            print('Err: \'%s\' is not valid integer for number_of_records' % args[1])
             usage()
     if nargs == 3:
         try:
             fields_number = int(args[2])
             call.append(fields_number)
         except ValueError:
-            print('Err: '%s' is not valid integer for number_of_fields' % args[2])
+            print('Err: \'%s\' is not valid integer for number_of_fields' % args[2])
             usage()
     gendbf(*call)
 
