@@ -1,4 +1,4 @@
-name: Run Python tests on push
+name: Test
 on: [push]
 jobs:
   build: 

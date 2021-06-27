@@ -1,6 +1,13 @@
 YDbf
 ====
 
+<p align="center">
+<a href="https://github.com/y10h/ydbf/actions"><img alt="Actions Status" src="https://github.com/y10h/ydbf/workflows/Test/badge.svg"></a>
+<a href="https://pypi.org/project/ydbf/"><img alt="PyPI" src="https://img.shields.io/pypi/v/ydbf"></a>
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+</p>
+
+
 YDbf - reading and writing DBF/XBase files in a pythonic way.
 The library written in pure Python and have no external
 dependencies.
