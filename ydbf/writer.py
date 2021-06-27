@@ -18,18 +18,19 @@ class YDbfWriter(object):
     """
     Writes DBF from iterator
     """
-    def __init__(self, fh, fields, use_unicode=True, encoding='ascii'):
+
+    def __init__(self, fh, fields, use_unicode=True, encoding="ascii"):
         """
         Creates DBF writer
-        
+
         Args:
             `fh`:
                 filehandler, should be opened for binary write
             `fields`:
                 fields structure in format
-                
+
                     [(NAME, TYPE, SIZE, DECIMAL), ...]
-                
+
                 `NAME` is name of field (should be string),
                 `TYPE` is a DBF type (string from ("N", "D", "C", "L")),
                 `SIZE` is a length of field (integer) and `DECIMAL` -- length
@@ -48,7 +49,7 @@ class YDbfWriter(object):
         self.fields = fields
         self.encoding = encoding
         self.use_unicode = use_unicode
-        
+
         self.now = datetime.date.today()
         self.numrec = 0
         self.numfields = len(fields)
@@ -56,62 +57,67 @@ class YDbfWriter(object):
         self.recsize = sum([field[2] for field in fields]) + 1
         self.date2dbf = lib.date2dbf
         self.sig = 0x03  # signature, DBF 3
-        self.lang = 0x0 # default -- ascii, 0x00
-        
+        self.lang = 0x0  # default -- ascii, 0x00
+
         self.converters = {}
         self.action_resolvers = ()
 
         self._defineLangCode()
         self._writeHeader()
         self._makeActions()
-    
+
     def _defineLangCode(self):
         lang_code = lib.REVERSE_ENCODINGS.get(self.encoding)
-        encodings = ', '.join(sorted(lib.REVERSE_ENCODINGS.keys()))
+        encodings = ", ".join(sorted(lib.REVERSE_ENCODINGS.keys()))
         if not lang_code:
-            raise ValueError('Encoding %s is not available for DBF, please '
-                             'use one of: %s' % (self.encoding, encodings))
+            raise ValueError(
+                "Encoding %s is not available for DBF, please "
+                "use one of: %s" % (self.encoding, encodings)
+            )
         self.lang = lang_code[0]
 
     def _makeActions(self):
         def py2dbf_date(val, size, dec):
-            return self.date2dbf(val) if val else b'        '
-        
+            return self.date2dbf(val) if val else b"        "
+
         def py2dbf_logic(val, size, dec):
-            return b'T' if val else b'F'
-        
+            return b"T" if val else b"F"
+
         def py2dbf_unicode(val, size, dec):
-            return (
-                val[:size].encode(self.encoding).ljust(size)
-                if val else b' ' * size)
-        
+            return val[:size].encode(self.encoding).ljust(size) if val else b" " * size
+
         def py2dbf_string(val, size, dec):
             return (
                 val.encode(lib.SYSTEM_ENCODING)[:size].ljust(size)
-                if val else b' ' * size)
-        
+                if val
+                else b" " * size
+            )
+
         def py2dbf_integer(val, size, dec):
             return (
                 str(val).encode(lib.SYSTEM_ENCODING).rjust(size)
-                if val else b'0'.rjust(size))
-        
+                if val
+                else b"0".rjust(size)
+            )
+
         def py2dbf_decimal(val, size, dec):
             return (
-                (b'%%.%df' % dec) % float(str(val))
-                if val else b'0.%s' % (b'0' * dec)
+                (b"%%.%df" % dec) % float(str(val)) if val else b"0.%s" % (b"0" * dec)
             ).rjust(size)
-        
+
         self.action_resolvers = (
             lambda typ, size, dec: (
-                py2dbf_unicode
-                if (typ == lib.CHAR and self.use_unicode) else None),
+                py2dbf_unicode if (typ == lib.CHAR and self.use_unicode) else None
+            ),
             lambda typ, size, dec: (
-                py2dbf_string
-                if (typ == lib.CHAR and not self.use_unicode) else None),
+                py2dbf_string if (typ == lib.CHAR and not self.use_unicode) else None
+            ),
             lambda typ, size, dec: (
-                py2dbf_decimal if (typ == lib.NUMERAL and dec) else None),
+                py2dbf_decimal if (typ == lib.NUMERAL and dec) else None
+            ),
             lambda typ, size, dec: (
-                py2dbf_integer if (typ == lib.NUMERAL and not dec) else None),
+                py2dbf_integer if (typ == lib.NUMERAL and not dec) else None
+            ),
             lambda typ, size, dec: py2dbf_date if typ == lib.DATE else None,
             lambda typ, size, dec: py2dbf_logic if typ == lib.LOGICAL else None,
         )
@@ -124,8 +130,10 @@ class YDbfWriter(object):
                     self.converters[name] = action
                     break
             if not field_resolved:
-                raise ValueError('Cannot find python-to-dbf converter '
-                                 'for field %s (type %s)' % (name, typ))
+                raise ValueError(
+                    "Cannot find python-to-dbf converter "
+                    "for field %s (type %s)" % (name, typ)
+                )
 
     def _writeHeader(self):
         """
@@ -133,37 +141,46 @@ class YDbfWriter(object):
         """
         pos = self.fh.tell()
         self.fh.seek(0)
-        year, month, day = self.now.year-1900, self.now.month, self.now.day
+        year, month, day = self.now.year - 1900, self.now.month, self.now.day
 
-        self.hdr = struct.pack(lib.HEADER_FORMAT, self.sig, year, month,
-                               day, self.numrec, self.lenheader,
-                               self.recsize, self.lang)
+        self.hdr = struct.pack(
+            lib.HEADER_FORMAT,
+            self.sig,
+            year,
+            month,
+            day,
+            self.numrec,
+            self.lenheader,
+            self.recsize,
+            self.lang,
+        )
         self.fh.write(self.hdr)
         for name, typ, size, deci in self.fields:
             if typ not in (lib.CHAR, lib.DATE, lib.LOGICAL, lib.NUMERAL):
-                raise ValueError('Unknown type %r on field %s' % (typ, name))
+                raise ValueError("Unknown type %r on field %s" % (typ, name))
             name_bytes = name.encode(lib.SYSTEM_ENCODING)
             type_bytes = typ.encode(lib.SYSTEM_ENCODING)
-            padded_name_bytes = name_bytes.ljust(11, b'\x00')
-            fld = struct.pack(lib.FIELD_DESCRIPTION_FORMAT,
-                              padded_name_bytes, type_bytes, size, deci)
+            padded_name_bytes = name_bytes.ljust(11, b"\x00")
+            fld = struct.pack(
+                lib.FIELD_DESCRIPTION_FORMAT, padded_name_bytes, type_bytes, size, deci
+            )
             self.fh.write(fld)
         # terminator
-        self.fh.write(b'\x0d')
+        self.fh.write(b"\x0d")
         if pos > 0:
             self.fh.seek(pos)
 
     def flush(self):
         self._writeHeader()
         self.fh.flush()
-    
+
     def close(self):
         self.fh.close()
-    
+
     def write(self, records):
         """
         Run DBF-creator
-        
+
         Args:
             `records`:
                 iterator over records (each record is a dict of values)
@@ -172,56 +189,58 @@ class YDbfWriter(object):
         for rec in records:
             i += 1
             try:
-                raw_rec = b''.join(self.converters[name](rec[name], size, dec)
-                                  for name, typ, size, dec in self.fields)
+                raw_rec = b"".join(
+                    self.converters[name](rec[name], size, dec)
+                    for name, typ, size, dec in self.fields
+                )
             except UnicodeDecodeError as err:
                 self.flush()
                 if self.use_unicode:
-                    msg = 'Error occured while writing rec #%d. You are '
-                    'using YDbfWriter with unicode mode turned on (encoding '
-                    'set to %s, lang code %s), but probably push 8-bit string '
-                    'data to writer. Check yourself, please. Record data: '
-                    '%s ' % (i, self.encoding, hex(self.lang), rec)
+                    msg = "Error occured while writing rec #%d. You are "
+                    "using YDbfWriter with unicode mode turned on (encoding "
+                    "set to %s, lang code %s), but probably push 8-bit string "
+                    "data to writer. Check yourself, please. Record data: "
+                    "%s " % (i, self.encoding, hex(self.lang), rec)
                 else:
-                    msg = 'Error occured while writing rec #%d. You are '
-                    'using YDbfWriter with unicode mode turned off, so '
-                    'we doesn\'t know why it occurs, so may be it is an '
-                    'issue inside ydbf, or corrupted data, or some flowing '
-                    'bug in your code. Check record data: %s' % (i, rec)
+                    msg = "Error occured while writing rec #%d. You are "
+                    "using YDbfWriter with unicode mode turned off, so "
+                    "we doesn't know why it occurs, so may be it is an "
+                    "issue inside ydbf, or corrupted data, or some flowing "
+                    "bug in your code. Check record data: %s" % (i, rec)
                 args = list(err.args[:-1]) + [msg]
                 raise UnicodeDecodeError(*args)
             except UnicodeEncodeError as err:
                 self.flush()
                 if self.use_unicode:
-                    msg = 'Error occured while writing rec #%d. You are '
-                    'using YDbfWriter with unicode mode turned on and encoding '
-                    '%s (lang code %s). Probably, data you are pushing to '
-                    'writer doesn\'t fit to %s encoding, please choose '
-                    'another encoding (recommended), or encode your data '
-                    'yourself and turn off unicode mode for writer. Record '
-                    'data: %s' % (i, self.encoding, hex(self.lang),
-                    self.encoding, rec)
+                    msg = "Error occured while writing rec #%d. You are "
+                    "using YDbfWriter with unicode mode turned on and encoding "
+                    "%s (lang code %s). Probably, data you are pushing to "
+                    "writer doesn't fit to %s encoding, please choose "
+                    "another encoding (recommended), or encode your data "
+                    "yourself and turn off unicode mode for writer. Record "
+                    "data: %s" % (i, self.encoding, hex(self.lang), self.encoding, rec)
                 else:
-                    msg = 'Error occured while writing rec #%d. You are '
-                    'using YDbfWriter with unicode mode turned off, but '
-                    'probably push unicode data to writer. Check yourself, '
-                    'please. Record data: %s ' % (i, rec)
+                    msg = "Error occured while writing rec #%d. You are "
+                    "using YDbfWriter with unicode mode turned off, but "
+                    "probably push unicode data to writer. Check yourself, "
+                    "please. Record data: %s " % (i, rec)
                 args = list(err.args[:-1]) + [msg]
                 raise UnicodeEncodeError(*args)
             except (IndexError, ValueError, TypeError, KeyError) as err:
                 self.flush()
-                raise RuntimeError('Error occured (%s: %s) while reading '
-                                   'rec #%d. Record data: %s' %
-                                   (err.__class__.__name__, err, i, rec))
+                raise RuntimeError(
+                    "Error occured (%s: %s) while reading "
+                    "rec #%d. Record data: %s" % (err.__class__.__name__, err, i, rec)
+                )
             # first empty symbol is a deletion flag
-            self.fh.write(b' '+raw_rec)
+            self.fh.write(b" " + raw_rec)
             self.numrec = i
             if divmod(i, 1000)[1] == 0:
                 # each 1k records flush header
                 self.flush()
         self._writeHeader()
         # End of file
-        self.fh.write(b'\x1A')
+        self.fh.write(b"\x1A")
         self.fh.flush()
 
     def __enter__(self):

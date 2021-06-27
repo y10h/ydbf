@@ -89,12 +89,13 @@ keys are name of fields. For example,
 """
 try:
     import pkg_resources
+
     try:
-        VERSION = pkg_resources.get_distribution('YDbf').version
+        VERSION = pkg_resources.get_distribution("YDbf").version
     except pkg_resources.DistributionNotFound:
-        VERSION = 'unknown'
+        VERSION = "unknown"
 except ImportError:
-    VERSION = 'N/A'
+    VERSION = "N/A"
 
 import builtins
 
@@ -108,8 +109,8 @@ from ydbf.lib import NUMERAL
 from ydbf.reader import YDbfReader
 from ydbf.writer import YDbfWriter
 
-READ = 'r'
-WRITE = 'w'
+READ = "r"
+WRITE = "w"
 
 FILE_MODES = {
     READ: YDbfReader,
@@ -120,31 +121,31 @@ FILE_MODES = {
 def open(dbf_file, mode=READ, *args, **kwargs):
     """
     Open DBF for reading or writing
-    
+
     Args:
         `dbf_file`:
             file name or file-like object
-        
+
         `mode`:
             'r' for reading, 'w' for writing
-        
+
         `fields`:
             fields structure of DBF file, most
             useful for writing mode, defined as
             [(NAME, TYPE, SIZE, DECIMAL), ...]
-        
+
         `use_unicode`:
             Use unicode for string data, True by default
-        
+
         `encoding`:
             Set encoding of DBF file, most
             useful for writing mode.
     """
     if mode not in FILE_MODES:
-        raise ValueError('Wrong mode %s for ydbf.open' % mode)
+        raise ValueError("Wrong mode %s for ydbf.open" % mode)
     dbf_class = FILE_MODES[mode]
     if isinstance(dbf_file, str):
-        fh = builtins.open(dbf_file, '{mode}b'.format(mode=mode))
+        fh = builtins.open(dbf_file, "{mode}b".format(mode=mode))
         return dbf_class(fh, *args, **kwargs)
     else:
         return dbf_class(dbf_file, *args, **kwargs)
