@@ -141,7 +141,7 @@ def open(dbf_file, mode=READ, *args, **kwargs):
             useful for writing mode.
     """
     if mode not in FILE_MODES:
-        raise ValueError("Wrong mode %s for ydbf.open" % mode)
+        raise ValueError('Wrong mode %s for ydbf.open' % mode)
     dbf_class = FILE_MODES[mode]
     if isinstance(dbf_file, str):
         fh = builtins.open(dbf_file, '{mode}b'.format(mode=mode))

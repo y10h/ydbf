@@ -21,6 +21,7 @@ class YDbfReader(object):
     
     Instance is an iterator over DBF records
     """
+
     def __init__(self, fh, fields=None, use_unicode=True, encoding=None):
         """
         Iterator over DBF records
@@ -92,7 +93,7 @@ class YDbfReader(object):
             return self.dbf2date(val)
         
         def dbf2py_logic(val, size, dec):
-            return val.strip() in (b"Y", b"y", b"T", b"t")
+            return val.strip() in (b'Y', b'y', b'T', b't')
         
         def dbf2py_unicode(val, size, dec):
             return val.decode(self.encoding).rstrip()
@@ -107,14 +108,18 @@ class YDbfReader(object):
             return Decimal(('%%.%df'%dec) % float(val.strip() or 0.0))
 
         self.action_resolvers = (
-            lambda typ, size, dec: (typ == lib.CHAR and self.encoding) and \
-                                    dbf2py_unicode,
-            lambda typ, size, dec: (typ == lib.CHAR and not self.encoding) and \
-                                    dbf2py_string,
-            lambda typ, size, dec: (typ == lib.NUMERAL and dec) and dbf2py_decimal,
-            lambda typ, size, dec: (typ == lib.NUMERAL and not dec) and dbf2py_integer,
-            lambda typ, size, dec: typ == lib.DATE and dbf2py_date,
-            lambda typ, size, dec: typ == lib.LOGICAL and dbf2py_logic,
+            lambda typ, size, dec: (
+                dbf2py_unicode
+                if (typ == lib.CHAR and self.encoding) else None),
+            lambda typ, size, dec: (
+                dbf2py_string
+                if (typ == lib.CHAR and not self.encoding) else None),
+            lambda typ, size, dec: (
+                dbf2py_decimal if (typ == lib.NUMERAL and dec) else None),
+            lambda typ, size, dec: (
+                dbf2py_integer if (typ == lib.NUMERAL and not dec) else None),
+            lambda typ, size, dec: dbf2py_date if typ == lib.DATE else None,
+            lambda typ, size, dec: dbf2py_logic if typ == lib.LOGICAL else None,
         )
         for name, typ, size, dec in self._fields:
             for resolver in self.action_resolvers:
@@ -123,8 +128,8 @@ class YDbfReader(object):
                     self.converters[name] = action
                     break
             if not action:
-                raise ValueError("Cannot find dbf-to-python converter "
-                                 "for field %s (type %s)" % (name, typ))
+                raise ValueError('Cannot find dbf-to-python converter '
+                                 'for field %s (type %s)' % (name, typ))
                     
     def _readHeader(self):
         """
@@ -143,7 +148,7 @@ class YDbfReader(object):
         self.sig = sig
         if sig not in lib.SUPPORTED_SIGNATURES:
             version = lib.SIGNATURES.get(sig, 'UNKNOWN')
-            raise ValueError("DBF version '%s' (signature %s) not supported"
+            raise ValueError('DBF version \'%s\' (signature %s) not supported'
                              % (version, hex(sig)))
         
         numfields = (lenheader - 33) // 32
@@ -155,18 +160,18 @@ class YDbfReader(object):
             type_string = typ.decode(lib.SYSTEM_ENCODING)
             name_string = name.decode(lib.SYSTEM_ENCODING)
             if type_string not in (lib.CHAR, lib.DATE, lib.LOGICAL, lib.NUMERAL):
-                raise ValueError("Unknown type {} on field {}".format(
+                raise ValueError('Unknown type {} on field {}'.format(
                     type_string, name_string))
             fields.append((name_string, type_string, size, deci))
 
         terminator = self.fh.read(1)
         if terminator != b'\x0d':
-            raise ValueError("Terminator should be 0x0d. Terminator is a "
-                             "delimiter, which splits header and data "
-                             "sections in file. By specification it should be "
-                             "0x0d, but it '%s'. This may be as result of "
-                             "corrupted file, non-DBF data or error in YDbf "
-                             "library." % hex(terminator))
+            raise ValueError('Terminator should be 0x0d. Terminator is a '
+                             'delimiter, which splits header and data '
+                             'sections in file. By specification it should be '
+                             '0x0d, but it \'%s\'. This may be as result of '
+                             'corrupted file, non-DBF data or error in YDbf '
+                             'library.' % hex(terminator))
         fields.insert(0, ('_deletion_flag', lib.CHAR, 1, 0))
         self.builtin__fields = fields  # with _deletion_flag
         self.builtin_fields = fields[1:] # without _deletion_flag
@@ -185,12 +190,12 @@ class YDbfReader(object):
     def _defineEncoding(self):
         self.builtin_encoding = lib.ENCODINGS.get(self.raw_lang, (None,))[0]
         if self.builtin_encoding is None and self.explicit_encoding is None:
-            raise ValueError("Cannot resolve builtin lang code %s "
-                             "to encoding and no option `encoding` "
-                             "passed, but `use_unicode` are, so "
-                             "there is no info how we can decode chars "
-                             "to unicode. Please, set up option `encoding` "
-                             "or set `use_unicode` to False"
+            raise ValueError('Cannot resolve builtin lang code %s '
+                             'to encoding and no option `encoding` '
+                             'passed, but `use_unicode` are, so '
+                             'there is no info how we can decode chars '
+                             'to unicode. Please, set up option `encoding` '
+                             'or set `use_unicode` to False'
                              % hex(self.raw_lang))
         if self.explicit_encoding:
             self.encoding = self.explicit_encoding
@@ -250,18 +255,18 @@ class YDbfReader(object):
                             if (name != '_deletion_flag' or show_deleted))
             except UnicodeDecodeError as err:
                 args = list(err.args[:-1]) + [
-                    "Error occured while reading rec #%d. You are "
-                    "using YDbfReader with unicode-related options: "
-                    "actual encoding %s, builtin DBF encoding %s (raw lang "
-                    "code %s), manually set encoding is %s. Probably, data "
-                    "in DBF file is not encoded with %s encoding, so you "
-                    "should manually define encoding by setting up `encoding` "
-                    "option" % (i, self.encoding, self.builtin_encoding,
+                    'Error occured while reading rec #%d. You are '
+                    'using YDbfReader with unicode-related options: '
+                    'actual encoding %s, builtin DBF encoding %s (raw lang '
+                    'code %s), manually set encoding is %s. Probably, data '
+                    'in DBF file is not encoded with %s encoding, so you '
+                    'should manually define encoding by setting up `encoding` '
+                    'option' % (i, self.encoding, self.builtin_encoding,
                     hex(self.raw_lang), self.explicit_encoding, self.encoding)]
                 raise UnicodeDecodeError(*args)
             except (IndexError, ValueError, TypeError, KeyError) as err:
-                raise RuntimeError("Error occured (%s: %s) while reading rec "
-                                   "#%d" % (err.__class__.__name__, err, i))
+                raise RuntimeError('Error occured (%s: %s) while reading rec '
+                                   '#%d' % (err.__class__.__name__, err, i))
 
     def read(self):
         return self.records()
@@ -290,33 +295,35 @@ class YDbfStrictReader(YDbfReader):
         If some check failed, AssertionError is raised.
         """
         ## check records
-        assert self.recsize > 1, "Length of record must be >1"
+        assert self.recsize > 1, 'Length of record must be >1'
         if self.sig in (0x03, 0x04):
-            assert self.recsize < 4000, "Length of record must be <4000 B " \
-                                        "for dBASE III and IV"
-        assert self.recsize < 32*1024, "Length of record must be <32KB"
-        assert self.numrec >= 0, "Number of records must be non-negative"
+            assert self.recsize < 4000, ('Length of record must be <4000 B '
+                                         'for dBASE III and IV')
+        assert self.recsize < 32*1024, 'Length of record must be <32KB'
+        assert self.numrec >= 0, 'Number of records must be non-negative'
 
         ## check fields
-        assert self.numfields > 0, "The dbf file must have at least one field"
+        assert self.numfields > 0, 'The dbf file must have at least one field'
         if self.sig == 0x03:
-            assert self.numfields < 128, "Number of fields in dBASE III " \
-                                         "must be <128"
+            assert self.numfields < 128, ('Number of fields in dBASE III '
+                                          'must be <128')
         if self.sig == 0x04:
-            assert self.numfields < 256, "Number of fields in dBASE IV " \
-                                         "must be <256"
+            assert self.numfields < 256, ('Number of fields in dBASE IV '
+                                          'must be <256')
 
         ## check fields, round 2
         for f_name, f_type, f_size, f_decimal in self.fields:
             if f_type == lib.NUMERAL:
-                assert f_size < 20, "Size of numeral field must be <20 " \
-                                    "(field '%s', size %d)" % (f_name, f_size)
+                assert f_size < 20, ('Size of numeral field must be <20 '
+                                     '(field \'%s\', size %d)'
+                                     % (f_name, f_size))
             if f_type == lib.CHAR:
-                assert f_size < 255, "Size of numeral field must be <255 " \
-                                     "(field '%s', size %d)" % (f_name, f_size)
+                assert f_size < 255, ('Size of numeral field must be <255 '
+                                      '(field \'%s\', size %d)'
+                                      % (f_name, f_size))
             if f_type == lib.LOGICAL:
-                assert f_size == 1, "Size of logical field must be 1 (field " \
-                                    "'%s', size %d)" % (f_name, f_size)
+                assert f_size == 1, ('Size of logical field must be 1 (field '
+                                     '\'%s\', size %d)' % (f_name, f_size))
 
         ## check size, if available
         file_name = getattr(self.fh, 'name', None)
@@ -327,7 +334,7 @@ class YDbfStrictReader(YDbfReader):
             except OSError:
                 return
             dbf_size = int(self.lenheader + 1 + self.numrec*self.recsize)
-            assert os_size == dbf_size, "Logical size (calculated from file " \
-                                        "structure and number of records) " \
-                                        "should be equal to size of file"
+            assert os_size == dbf_size, ('Logical size (calculated from file '
+                                         'structure and number of records) '
+                                         'should be equal to size of file')
 

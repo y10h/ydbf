@@ -132,8 +132,8 @@ def date2dbf(dt):
             datetime.date instance
     """
     if not isinstance(dt, datetime.date):
-        raise TypeError("Espects datetime.date instead of %s" % type(dt))
-    return b"%04d%02d%02d" % (dt.year, dt.month, dt.day)
+        raise TypeError('Espects datetime.date instead of %s' % type(dt))
+    return b'%04d%02d%02d' % (dt.year, dt.month, dt.day)
     
 def dbf2str(dbf_str):
     """
@@ -147,7 +147,7 @@ def dbf2str(dbf_str):
         result = None
     else:
         string_date = dbf_str.decode(SYSTEM_ENCODING)
-        result = ".".join(reversed((string_date[:4],
+        result = '.'.join(reversed((string_date[:4],
                                     string_date[4:6],
                                     string_date[6:8])))
     return result
@@ -161,7 +161,7 @@ def str2dbf(dt_str):
             string in format DD.MM.YYYY
     """
     if not isinstance(dt_str, str):
-        raise TypeError("Espects string or unicode instead of %s"
+        raise TypeError('Espects string or unicode instead of %s'
                          % type(dt_str))
     str_l = len(dt_str)
     if str_l != 10:

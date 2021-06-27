@@ -73,14 +73,14 @@ def show_info(files, output):
         output.write(_INFO_TEMPLATE % header_info)
 
         for i, (name, type_, length, dec) in enumerate(reader.fields):
-            output.write("% 3d.  %s  %s  %s  %d\n" %
+            output.write('% 3d.  %s  %s  %s  %d\n' %
                 (i+1, name.ljust(20), type_, str(length).rjust(3), dec))
 
 def parse_options(args):
     """
     Parse options
     """
-    parser = OptionParser(usage="%prog [options] files", version="%%prog %s"
+    parser = OptionParser(usage='%prog [options] files', version='%%prog %s'
                                                                  % VERSION)
     parser.add_option('-r', '--rs',
                            dest='record_separator',
@@ -103,15 +103,15 @@ def parse_options(args):
                            callback=_split_fields,
                            default='',
                            type='string',
-                           help='comma separated list of fields to print ' \
-                                '[default all]',
+                           help=('comma separated list of fields to print '
+                                 '[default all]'),
                            )
     parser.add_option('-u', '--undef',
                            dest='undef',
                            type='string',
                            default='',
-                           help='string to print for NULL values ' \
-                                '[default emptystring]'
+                           help=('string to print for NULL values '
+                                 '[default emptystring]')
                            ),
     parser.add_option('-t', '--table',
                            dest='table',
@@ -226,9 +226,9 @@ def dbf_data(fh, fields=None):
             # got wrong name in fields
             difference = tuple(set(fields) - set(f[0] for f in fields_spec))
             if difference:
-                raise ValueError("Wrong fields: %s" % ', '.join(difference))
+                raise ValueError('Wrong fields: %s' % ', '.join(difference))
             else:
-                raise ValueError("Wrong fields")
+                raise ValueError('Wrong fields')
     else:
         # all fields
         fields_spec = reader.fields

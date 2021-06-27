@@ -38,7 +38,7 @@ def testdata(filename=None, mode='rb'):
     def testrunner(testmethod):
         def wrapper(self):
             if skip:
-                print("test %s SKIPPED, have no test file %s" \
+                print('test %s SKIPPED, have no test file %s'
                       % (testmethod.__name__, filename))
                 outp = None
             else:
@@ -365,7 +365,7 @@ class TestYdbfWriter(unittest.TestCase):
             ('DTE_FLD', 'D', 8, 0),
             ('BLN_FLD', 'L', 1, 0),
         )
-        fh = io.BytesIO(b"")
+        fh = io.BytesIO(b'')
         with self.assertRaises(ValueError):
             ydbf.YDbfWriter(fh, fields)
 

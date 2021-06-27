@@ -17,8 +17,8 @@ import ydbf
 
 
 def get_n_random(size, dec):
-    assert size < 20, "number cannot be longer than 20 digits (got %s)" % size
-    assert dec < size, "size (%s) must be bigger than dec (%s)" % (size, dec)
+    assert size < 20, 'number cannot be longer than 20 digits (got %s)' % size
+    assert dec < size, 'size (%s) must be bigger than dec (%s)' % (size, dec)
     n = random.randint(0, 10**(size-dec-1)-1)
     if dec:
         if size-dec-1 == 0:
@@ -43,7 +43,7 @@ def get_d_random(size, dec):
         return get_d_random(size, dec)
 
 def get_c_random(size, dec, force_ascii=False):
-    assert size < 255, "string cannot be longer than 255 (got %s)" % size
+    assert size < 255, 'string cannot be longer than 255 (got %s)' % size
     alphabet = (
         {
             'consonants': ('b', 'd', 'g', 'h', 'k', 'l', 'm', 'n', 'p', 'r', 's', 't', 'z'),
@@ -78,9 +78,9 @@ def get_rec(fields_struct):
     rec = {}
     for name, typ, size, dec in fields_struct:
         assert typ in (ydbf.CHAR, ydbf.DATE, ydbf.LOGICAL, ydbf.NUMERAL)
-        getter = globals().get("get_%s_random" % typ.lower())
+        getter = globals().get('get_%s_random' % typ.lower())
         if not callable(getter):
-            raise ValueError("Cannot get data getter for DBF type %s (field %s)" % (typ, name))
+            raise ValueError('Cannot get data getter for DBF type %s (field %s)' % (typ, name))
         value = getter(size, dec)
         # 10% of records -- None
         rec[name] = random.choice([value for _ in range(9)] + [None])
@@ -121,7 +121,7 @@ def gendbf(filename, number_of_records=2000, fields_number=20):
     dbf.close()
 
 def usage():
-    print("Usage: gendbf.py <name> [number_of_records] [number_of_fields] ")
+    print('Usage: gendbf.py <name> [number_of_records] [number_of_fields] ')
     print()
     sys.exit(1)
 
@@ -135,14 +135,14 @@ def main(args):
             number_of_records = int(args[1])
             call.append(number_of_records)
         except ValueError:
-            print("Err: '%s' is not valid integer for number_of_records" % args[1])
+            print('Err: '%s' is not valid integer for number_of_records' % args[1])
             usage()
     if nargs == 3:
         try:
             fields_number = int(args[2])
             call.append(fields_number)
         except ValueError:
-            print("Err: '%s' is not valid integer for number_of_fields" % args[2])
+            print('Err: '%s' is not valid integer for number_of_fields' % args[2])
             usage()
     gendbf(*call)
 
